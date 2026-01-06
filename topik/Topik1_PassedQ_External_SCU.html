@@ -1,0 +1,2276 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TOPIK I-듣기 기출문제</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/@dotlottie/player-component@2.7.12/dist/dotlottie-player.mjs" type="module"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;900&display=swap');
+        
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background: linear-gradient(135deg, #e0f2fe 0%, #b3e5fc 100%);
+            min-height: 100vh;
+            overflow: hidden;
+            user-select: none; 
+        }
+        
+        .page {
+            display: none;
+            height: 100vh;
+            width: 100vw;
+            position: relative;
+        }
+        
+        .page.active {
+            display: block;
+        }
+        
+        .btn-hover:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            cursor: pointer;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #2196f3 0%, #1976d2 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-weight: 700;
+            transition: all 0.3s ease;
+        }
+        
+        /* 新增：練習頁面專用的水藍色按鈕 */
+        .btn-water {
+            /* 使用青色(Cyan)到天藍色(Sky)的漸層，呈現清澈的水藍色 */
+            background: linear-gradient(135deg, #00acc1 0%, #039be5 100%); 
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-weight: 700;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0, 172, 193, 0.3); /* 給予一點陰影增加層次感 */
+        }
+
+        .btn-water:active {
+             transform: scale(0.98);
+        }
+
+        /* 確保喇叭圖示區域有足夠的點擊範圍 */
+        .audio-trigger-zone {
+            padding: 4px 8px 4px 4px; /* 增加觸控面積 */
+            margin-right: 4px;
+            border-right: 1px solid rgba(255,255,255,0.2); /* 視覺分隔線(可選) */
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #81c784 0%, #66bb6a 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-weight: 700;
+            transition: all 0.3s ease;
+        }
+        
+        .vocabulary-card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            padding: 1rem;
+            transition: all 0.3s ease;
+        }
+        
+        .vocabulary-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+        }
+        
+        .drag-zone {
+            border: 2px dashed #bbb;
+            border-radius: 8px;
+            min-height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            width: 100px;
+            font-size: 16px;
+            line-height: 1.1;
+            text-align: center;
+            white-space: nowrap;
+        }
+        
+        @media (min-width: 1024px) {
+            .drag-zone {
+                min-height: 60px;
+                width: 120px;
+                font-size: 18px;
+            }
+        }
+        
+        .drag-zone.drag-over {
+            border-color: #2196f3;
+            background-color: #e3f2fd;
+        }
+        
+        .drag-zone.filled {
+            border: 2px solid #2196f3;
+            background-color: #2196f3;
+            color: white;
+        }
+        
+        .drag-zone.filled.incorrect {
+            border: 2px solid #ef4444;
+            background-color: #ef4444;
+            color: white;
+        }
+        
+        .draggable {
+            cursor: move;
+            user-select: none;
+        }
+        
+        .draggable:hover {
+            transform: scale(1.05);
+        }
+        
+        .audio-player {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            padding: 1rem;
+        }
+        
+        .countdown {
+            font-weight: 900;
+            text-shadow: 0 0 20px currentColor;
+            animation: pulse 1s ease-in-out;
+        }
+        
+        .countdown-large {
+            font-size: 4rem;
+        }
+        
+        .countdown-small {
+            font-size: 4rem;
+        }
+        
+        @media (max-width: 768px) {
+            .countdown-large {
+                font-size: 2rem;
+            }
+            .countdown-small {
+                font-size: 2rem;
+            }
+        }
+        
+        .countdown-container {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .countdown-circle {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            border: 4px solid transparent;
+            animation: drawCircle 1s ease-out forwards;
+        }
+        
+        @media (max-width: 768px) {
+            .countdown-circle {
+                width: 80px;
+                height: 80px;
+                border-width: 3px;
+            }
+        }
+        
+        @keyframes drawCircle {
+            0% {
+                border-color: transparent;
+                transform: translate(-50%, -50%) rotate(0deg);
+                border-top-color: currentColor;
+                border-right-color: transparent;
+                border-bottom-color: transparent;
+                border-left-color: transparent;
+            }
+            25% {
+                border-top-color: currentColor;
+                border-right-color: currentColor;
+                border-bottom-color: transparent;
+                border-left-color: transparent;
+                transform: translate(-50%, -50%) rotate(90deg);
+            }
+            50% {
+                border-top-color: currentColor;
+                border-right-color: currentColor;
+                border-bottom-color: currentColor;
+                border-left-color: transparent;
+                transform: translate(-50%, -50%) rotate(180deg);
+            }
+            75% {
+                border-top-color: currentColor;
+                border-right-color: currentColor;
+                border-bottom-color: currentColor;
+                border-left-color: currentColor;
+                transform: translate(-50%, -50%) rotate(270deg);
+            }
+            100% {
+                border-color: currentColor;
+                transform: translate(-50%, -50%) rotate(360deg);
+            }
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+        
+        .confetti {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            background: #f39c12;
+            animation: confetti-fall 3s linear infinite;
+        }
+        
+        @keyframes confetti-fall {
+            0% {
+                transform: translateY(-100vh) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(100vh) rotate(720deg);
+                opacity: 0;
+            }
+        }
+        
+        .image-option {
+            transition: all 0.3s ease;
+            border-radius: 12px;
+            overflow: hidden;
+            cursor: pointer;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            -webkit-user-drag: none;
+            -khtml-user-drag: none;
+            -moz-user-drag: none;
+            -o-user-drag: none;
+            user-drag: none;
+        }
+        
+        .image-option:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(33, 150, 243, 0.8);
+            cursor: pointer;
+        }
+        
+        .image-option img {
+            pointer-events: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            -webkit-user-drag: none;
+            -khtml-user-drag: none;
+            -moz-user-drag: none;
+            -o-user-drag: none;
+            user-drag: none;
+        }
+        
+        .nav-button {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .nav-button:hover {
+            transform: scale(1.1);
+        }
+        
+        .nav-button.current {
+            border: 3px solid rgba(33, 150, 243, 1);
+            box-shadow: 0 0 0 0 rgba(33, 150, 243, 1), 0 0 25px rgba(33, 150, 243, 0);
+            animation: currentGlow 2s ease-in-out infinite alternate;
+        }
+        
+        @keyframes currentGlow {
+            0% {
+                box-shadow: 0 0 0 0 rgba(33, 150, 243, 1), 0 0 25px rgba(33, 150, 243, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 8px rgba(33, 150, 243, 0), 0 0 25px rgba(33, 150, 243, 0.8);
+            }
+        }
+        
+        /* Idle Hint Animation */
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .fade-in {
+            animation: fadeIn 1s forwards, float 2s ease-in-out infinite;
+        }
+
+        /* Task 1: Idle Hint Responsive Font Size */
+        #idle-hint {
+            font-size: 0.875rem; /* Default (Mobile) */
+        }
+
+        @media (min-width: 768px) {
+            #idle-hint {
+                font-size: 1.75rem !important; /* 2x size for Desktop */
+            }
+        }
+        
+        /* Mobile button positioning adjustments */
+        @media (max-width: 639px) {
+            .mobile-nav-up {
+                top: calc(var(--original-top, 89.5%) - 2%) !important;
+            }
+            .mobile-nav-buttons-up {
+                top: calc(var(--original-top, 85.5%) - 3%) !important;
+            }
+            .mobile-images-top-down {
+                top: calc(var(--original-top, 23.5%) - 2%) !important;
+            }
+            .mobile-images-bottom-up {
+                top: calc(var(--original-top, 55%) - 5%) !important;
+            }
+            .mobile-countdown-up {
+                top: calc(var(--original-top, 49%) - 3%) !important;
+            }
+        }
+        
+        @media (min-width: 640px) {
+            .home-nav-buttons {
+                top: 89.5% !important;
+            }
+        }
+        
+        .vocab-title {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        @media (max-width: 768px) {
+            .vocab-title {
+                font-size: clamp(1.2rem, 8vw, 2rem);
+                letter-spacing: -0.1em;
+                transform: scaleX(0.85);
+                transform-origin: center;
+            }
+        }
+
+        /* Subtitle adjustments for mobile */
+        @media (max-width: 768px) {
+            #subtitle-container {
+                top: 20% !important; 
+            }
+            #subtitles {
+                white-space: nowrap;
+            }
+            #subtitle-korean, #subtitle-chinese {
+                letter-spacing: -1px; 
+            }
+        }
+        
+        .overflow-menu {
+            position: relative;
+        }
+        
+        .overflow-panel {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: rgba(255, 255, 255, 0.95);
+            border: 2px solid rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            padding: 6px;
+            z-index: 1000;
+            width: 130px;
+            min-width: 130px;
+            backdrop-filter: blur(5px);
+        }
+        
+        .overflow-panel button.menu-item {
+            width: 100%;
+            text-align: center;
+            display: block;
+            padding: 4px 12px;
+            margin: 2px 0;
+            border: none;
+            border-radius: 5px;
+            background: #d1d5db;
+            cursor: pointer;
+            transition: background 0.2s;
+            font-size: 14px;
+            height: 28px;
+            white-space: nowrap;
+            line-height: 20px;
+        }
+
+        .overflow-panel button.menu-item:hover {
+            background: #dbeafe;
+        }
+
+        .overflow-panel button.menu-item.active {
+            background: #3b82f6;
+            color: white;
+        }
+        
+        .overflow-panel button.close-button {
+            width: 20px !important;
+            height: 20px !important;
+            display: flex !important;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background: #ef4444;
+            color: white;
+            font-size: 12px;
+            font-weight: bold;
+            position: absolute;
+            top: -8px;
+            left: -8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        /* Blur mask animation */
+        .mask-fade-enter {
+            opacity: 0;
+        }
+        .mask-fade-enter-active {
+            opacity: 1;
+            transition: opacity 1.5s ease-in;
+        }
+        .mask-fade-exit {
+            opacity: 1;
+        }
+        .mask-fade-exit-active {
+            opacity: 0;
+            transition: opacity 1s ease-out;
+        }
+        
+    </style>
+</head>
+<body oncontextmenu="return false;">
+    <div id="page1" class="page active">
+        <audio id="intro-audio" preload="auto">
+            <source src="https://mon-ami.up.seesaa.net/topik/SE_Arirang.mp3" type="audio/mpeg">
+        </audio>
+        
+        <div id="intro-mask" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm transition-opacity duration-500 opacity-0 pointer-events-auto">
+            <div class="bg-white/90 border-2 border-blue-200 rounded-2xl p-8 text-center shadow-[0_0_40px_rgba(37,99,235,0.6)] transform scale-105">
+                 <h2 class="text-3xl md:text-4xl font-black text-blue-800 mb-8 drop-shadow-sm">Are you ready?</h2>
+                 <button id="intro-ok-btn" class="btn-primary px-10 py-3 text-xl shadow-lg hover:scale-105 transition-transform">GO!!</button>
+            </div>
+        </div>
+
+        <div class="absolute inset-0 grid grid-rows-12 grid-cols-12 gap-0">
+            <div class="row-start-1 row-span-1 col-span-12 flex items-end justify-center" style="padding-bottom: 0vh;">
+                <h1 class="text-4xl md:text-6xl font-black text-blue-800">TOPIK I-듣기 기출문제</h1>
+            </div>
+            
+            <div class="row-start-2 row-span-1 col-span-12 flex items-center justify-center" style="margin-top: -1vh;">
+                <p class="font-black text-blue-600" style="font-size: clamp(1.875rem, 5vw, 3rem);">(by Kiyoshi Chang)</p>
+            </div>
+            
+            <div class="row-start-3 row-span-8 col-span-12 flex items-center px-0">
+                <div class="hidden md:flex w-full h-full">
+                    <div class="w-[10%] h-full"></div>
+                    
+                    <div class="w-[50%] h-full flex items-center justify-end pr-8">
+                        <img src="https://mon-ami.up.seesaa.net/topik/TOPIK_Logo.png" alt="TOPIK Logo" class="max-h-full max-w-full object-contain">
+                    </div>
+                    
+                    <div class="w-[30%] h-full flex items-center justify-start pl-8">
+                        <dotlottie-player src="https://lottie.host/7ed854b3-9684-40f1-b6fd-810ce0c67921/rbhEC1S0dd.lottie" background="transparent" speed="1" style="width: 540px; height: 540px" loop autoplay></dotlottie-player>
+                    </div>
+                    
+                    <div class="w-[10%] h-full"></div>
+                </div>
+                
+                <div class="flex md:hidden w-full h-full flex-col items-center justify-center px-4">
+                    <div class="flex-1 flex items-end justify-center pb-4">
+                        <img src="https://mon-ami.up.seesaa.net/topik/TOPIK_Logo.png" alt="TOPIK Logo" class="max-h-full max-w-full object-contain" style="max-height: 200px;">
+                    </div>
+                    
+                    <div class="flex-1 flex items-start justify-center pt-4">
+                        <dotlottie-player src="https://lottie.host/7ed854b3-9684-40f1-b6fd-810ce0c67921/rbhEC1S0dd.lottie" background="transparent" speed="1" style="width: 280px; height: 280px" loop autoplay></dotlottie-player>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="idle-hint" class="absolute w-full text-center font-bold italic text-blue-600 hidden" style="top: 84%;">
+                ↓Please select a function↓
+            </div>
+            
+            <div class="absolute w-full flex items-center justify-center gap-2 sm:gap-8 home-nav-buttons" style="top: 87.5%; height: 3.5%;">
+                <button onclick="showPage('page2')" class="btn-primary btn-hover px-3 sm:px-6 py-2 text-sm sm:text-lg">VOCABULARIES</button>
+                <button onclick="showPage('page3')" class="btn-primary btn-hover px-3 sm:px-6 py-2 text-sm sm:text-lg">PRACTICE</button>
+                <button onclick="showPage('page4')" class="btn-primary btn-hover px-3 sm:px-6 py-2 text-sm sm:text-lg">QUESTIONS</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="page2" class="page">
+        <div class="absolute inset-0 grid grid-rows-12 grid-cols-12 gap-0">
+            <div class="row-start-1 row-span-1 col-span-12 flex items-end justify-center px-4" style="padding-bottom: 0vh;">
+                <h1 class="text-3xl md:text-5xl font-black text-blue-800 text-center vocab-title">TOPIK I-듣기 VOCABULARIES</h1>
+            </div>
+            
+            <div class="row-start-2 row-span-8 col-span-12 px-4" id="vocab-content" style="padding-top: 1vh; padding-bottom: 0;">
+                </div>
+            
+            <div class="absolute w-full flex items-center justify-center gap-1 mobile-nav-buttons-up" style="--original-top: 85.5%; top: 85.5%; height: 2.5%;">
+                <button onclick="showVocabPage(1)" class="nav-button bg-blue-500 text-white" id="vocab-nav-1">1</button>
+                <button onclick="showVocabPage(2)" class="nav-button bg-gray-400 text-white" id="vocab-nav-2">2</button>
+                <button onclick="showVocabPage(3)" class="nav-button bg-gray-400 text-white" id="vocab-nav-3">3</button>
+                <button onclick="showVocabPage(4)" class="nav-button bg-gray-400 text-white" id="vocab-nav-4">4</button>
+                <button onclick="showVocabPage(5)" class="nav-button bg-gray-400 text-white" id="vocab-nav-5">5</button>
+            </div>
+            
+            <div class="absolute w-full flex items-center justify-center gap-2 sm:gap-8 mobile-nav-up" style="--original-top: 89.5%; top: 89.5%; height: 3.5%;">
+                <button onclick="showPage('page1')" class="btn-primary btn-hover px-3 sm:px-4 py-2 text-sm sm:text-base">HOME</button>
+                <button onclick="showPage('page3')" class="btn-primary btn-hover px-3 sm:px-4 py-2 text-sm sm:text-base">PRACTICE</button>
+                <button onclick="showPage('page4')" class="btn-primary btn-hover px-3 sm:px-4 py-2 text-sm sm:text-base">QUESTIONS</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="page3" class="page">
+        <div class="absolute inset-0 grid grid-rows-12 grid-cols-12 gap-0">
+            <div class="row-start-1 row-span-1 col-span-12 flex items-end justify-center" style="padding-bottom: 1vh;">
+                <h1 class="text-3xl md:text-5xl font-black text-blue-800">TOPIK I-듣기 PRACTICE</h1>
+            </div>
+            
+            <div class="absolute w-full flex items-center justify-center gap-4 px-4" style="top: 8.5%; height: 4%;">
+                <div class="bg-white rounded-lg px-4 py-2 shadow-md">
+                    <span class="font-bold text-blue-800">문제: <span id="practice-current">1</span></span>
+                </div>
+                <div class="bg-white rounded-lg px-4 py-2 shadow-md">
+                    <span class="font-bold text-green-600">맞은 어휘: <span id="practice-correct">0</span></span>
+                </div>
+                <div class="bg-white rounded-lg px-4 py-2 shadow-md">
+                    <span class="font-bold text-purple-600">점수: <span id="practice-score">0</span></span>
+                </div>
+            </div>
+            
+            <div class="absolute w-full flex items-center justify-center z-20 pointer-events-none" style="top: 35%; height: 6%;">
+                <div id="practice-feedback" class="hidden rounded-xl px-8 py-6 shadow-xl text-center border-2 pointer-events-auto" style="background-color: rgba(255, 255, 255, 0.3); backdrop-filter: blur(10px);">
+                    <div class="text-3xl font-bold mb-2" id="practice-feedback-korean"></div>
+                    <div class="text-xl" id="practice-feedback-english" style="margin-top: 0.5vh;"></div>
+                </div>
+            </div>
+            
+            <div class="row-start-3 row-span-8 col-span-12 px-4" id="practice-content" style="padding-top: 0vh; padding-bottom: 0;">
+                </div>
+            
+            <div class="absolute w-full flex items-center justify-center gap-1 mobile-nav-buttons-up" style="--original-top: 85.0%; top: 85.0%; height: 2.5%;" id="practice-nav">
+                </div>
+            
+            <div class="absolute w-full flex items-center justify-center gap-2 sm:gap-8 mobile-nav-up" style="--original-top: 89.5%; top: 89.5%; height: 3.5%;">
+                <button onclick="showPage('page1')" class="btn-primary btn-hover px-3 sm:px-4 py-2 text-sm sm:text-base">HOME</button>
+                <button onclick="showPage('page2')" class="btn-primary btn-hover px-3 sm:px-4 py-2 text-sm sm:text-base">VOCABULARIES</button>
+                <button onclick="showPage('page4')" class="btn-primary btn-hover px-3 sm:px-4 py-2 text-sm sm:text-base">QUESTIONS</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="page4" class="page">
+        <div class="absolute inset-0">
+            <div class="absolute w-full flex items-center justify-center" style="top: 2%; height: 5%;">
+                <h1 class="text-3xl md:text-5xl font-black text-blue-800 whitespace-nowrap">TOPIK I-듣기 QUESTIONS</h1>
+            </div>
+            
+            <div class="absolute w-full flex items-center justify-center gap-4 px-4" style="top: 8.5%; height: 4%;">
+                <div class="bg-white rounded-lg px-4 py-2 shadow-md flex items-center justify-center h-full">
+                    <span class="font-bold text-blue-800 whitespace-nowrap text-sm md:text-base">문제: <span id="question-current">1</span></span>
+                </div>
+                <div class="bg-white rounded-lg px-4 py-2 shadow-md flex items-center justify-center h-full">
+                    <span class="font-bold text-green-600 whitespace-nowrap text-sm md:text-base">맞은 문제: <span id="question-correct">0</span></span>
+                </div>
+                <div class="bg-white rounded-lg px-4 py-2 shadow-md flex items-center justify-center h-full">
+                    <span class="font-bold text-purple-600 whitespace-nowrap text-sm md:text-base">점수: <span id="question-score">0</span></span>
+                </div>
+            </div>
+            
+            <div class="absolute w-full flex items-center justify-center px-4" style="top: 13.5%; height: 4%;">
+                <div class="w-full max-w-2xl relative">
+                    <audio id="question-audio" class="w-full h-8" controls controlsList="nodownload">
+                        <track kind="subtitles" src="" srclang="ko" label="Korean" id="audio-track">
+                    </audio>
+                    <div class="absolute top-0 right-0">
+                        <button id="overflow-btn" class="w-8 h-8 bg-blue-500 hover:bg-blue-600 rounded-full flex items-center justify-center text-white font-bold transition-all">⋮</button>
+                        <div id="overflow-panel" class="overflow-panel hidden z-50">
+                            <button onclick="closeOverflowPanel()" class="close-button">×</button>
+                            <div style="margin-top: 8px;">
+                                <button onclick="setPlaybackSpeed(0.5)" id="speed-50" class="menu-item">Speed: 50%</button>
+                                <button onclick="setPlaybackSpeed(0.75)" id="speed-75" class="menu-item">Speed: 75%</button>
+                                <button onclick="toggleCaptions()" id="captions-btn" class="menu-item">Captions</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="subtitle-container" class="absolute w-full flex items-center justify-center px-4" style="top: 18%; height: 3.5%;">
+                <div id="subtitles" class="text-center bg-transparent w-full max-w-4xl" style="visibility: hidden;">
+                    <div id="subtitle-korean" class="text-base font-bold leading-tight text-blue-600" style="margin-bottom: 0.05vh;"></div>
+                    <div id="subtitle-chinese" class="text-sm leading-tight"></div>
+                </div>
+            </div>
+            
+            <div class="absolute w-full px-4 mobile-images-top-down" style="--original-top: 23.5%; top: 23.5%; height: 29.5%;">
+                <div class="flex gap-2 h-full max-w-4xl mx-auto justify-center" id="question-images-top">
+                    </div>
+            </div>
+            
+            <div class="absolute w-full px-4 mobile-images-bottom-up" style="--original-top: 55%; top: 55%; height: 29.5%;">
+                <div class="flex gap-2 h-full max-w-4xl mx-auto justify-center" id="question-images-bottom">
+                    </div>
+            </div>
+            
+            <div class="absolute w-full flex items-center justify-center z-20 mobile-countdown-up" style="--original-top: 49%; top: 49%; height: 8%;">
+                <div id="countdown-container" class="countdown-container hidden">
+                    <div id="countdown-display" class="countdown countdown-large text-gray-400" style="text-shadow: 0 0 20px currentColor; position: relative; z-index: 2;">3</div>
+                    <div id="countdown-circle" class="countdown-circle" style="color: #9ca3af;"></div>
+                </div>
+                <div id="question-feedback" class="hidden rounded-xl px-8 py-6 shadow-xl text-center border-2" style="background-color: rgba(255, 255, 255, 0.3); backdrop-filter: blur(10px);">
+                    <div class="text-3xl font-bold mb-2" id="question-feedback-korean"></div>
+                    <div class="text-xl" id="question-feedback-english" style="margin-top: 0.5vh;"></div>
+                </div>
+            </div>
+            
+            <div class="absolute w-full flex items-center justify-center gap-1 mobile-nav-buttons-up" style="--original-top: 85.5%; top: 85.5%; height: 2.5%;" id="question-nav">
+                </div>
+            
+            <div class="absolute w-full flex items-center justify-center gap-2 sm:gap-8 mobile-nav-up" style="--original-top: 89.5%; top: 89.5%; height: 3.5%;">
+                <button onclick="showPage('page1')" class="btn-primary btn-hover px-3 sm:px-4 py-2 cursor-pointer text-sm sm:text-base">HOME</button>
+                <button onclick="showPage('page2')" class="btn-primary btn-hover px-3 sm:px-4 py-2 cursor-pointer text-sm sm:text-base">VOCABULARIES</button>
+                <button onclick="showPage('page3')" class="btn-primary btn-hover px-3 sm:px-4 py-2 cursor-pointer text-sm sm:text-base">PRACTICE</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="practice-results" class="page">
+        <div class="absolute inset-0 grid grid-rows-12 grid-cols-12 gap-0 p-4">
+            <div class="row-start-1 row-span-10 col-span-12 bg-white rounded-lg shadow-lg p-6 overflow-auto">
+                <h2 class="text-3xl font-black text-center mb-6 text-blue-800">연습 결과</h2>
+                <div id="practice-results-content"></div>
+                <div class="text-center mt-6">
+                    <button onclick="resetPractice(); showPage('page3');" class="btn-secondary btn-hover px-8 py-3 mr-4">PLAY AGAIN</button>
+                </div>
+            </div>
+            <div class="absolute w-full flex items-center justify-center gap-2 sm:gap-8 mobile-nav-up" style="--original-top: 89.5%; top: 89.5%; height: 3.5%;">
+                <button onclick="showPage('page1')" class="btn-primary btn-hover px-3 sm:px-4 py-2 text-sm sm:text-base">HOME</button>
+                <button onclick="showPage('page2')" class="btn-primary btn-hover px-3 sm:px-4 py-2 text-sm sm:text-base">VOCABULARIES</button>
+                <button onclick="showPage('page4')" class="btn-primary btn-hover px-3 sm:px-4 py-2 text-sm sm:text-base">QUESTIONS</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="question-results" class="page">
+        <div class="absolute inset-0 grid grid-rows-12 grid-cols-12 gap-0 p-4">
+            <div class="row-start-1 row-span-11 col-span-12 bg-white rounded-lg shadow-lg p-3 overflow-auto" style="margin-bottom: 5vh;">
+                <h2 class="text-3xl font-black text-center mb-2 text-blue-800">시험 결과</h2>
+                <div id="question-results-content"></div>
+                <div class="text-center mt-6">
+                    <button onclick="resetQuestions(); showPage('page4');" class="btn-secondary btn-hover px-8 py-3 mr-4">PLAY AGAIN</button>
+                </div>
+            </div>
+            <div class="absolute w-full flex items-center justify-center gap-2 sm:gap-8 mobile-nav-up" style="--original-top: 89.5%; top: 89.5%; height: 3.5%;">
+                <button onclick="showPage('page1')" class="btn-primary btn-hover px-3 sm:px-4 py-2 text-sm sm:text-base">HOME</button>
+                <button onclick="showPage('page2')" class="btn-primary btn-hover px-3 sm:px-4 py-2 text-sm sm:text-base">VOCABULARIES</button>
+                <button onclick="showPage('page3')" class="btn-primary btn-hover px-3 sm:px-4 py-2 text-sm sm:text-base">PRACTICE</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://kiyoshichang.github.io/code/topik/quiz_data02.js"></script>
+
+    <script>
+        // Global variables
+        let currentPage = 'page1';
+        let currentVocabPage = 1;
+        let currentPracticeQuestion = 1;
+        let currentQuestion = 1;
+        let practiceAnswers = {};
+        let questionAnswers = {};
+        let practiceCompleted = false;
+        let audioSpeed = 1.0;
+        let captionsEnabled = false;
+        let countdownTimer = null;
+        let audioTimer = null;
+        let currentAudio = null;
+        let currentResultsPage = 1;
+        let resultAudios = {};
+        let idleTimer = null; 
+        let endingAudio = null; 
+
+        // Page navigation
+        function showPage(pageId) {
+            if (idleTimer) {
+                clearTimeout(idleTimer);
+                idleTimer = null;
+            }
+            const idleHint = document.getElementById('idle-hint');
+            if (idleHint) {
+                idleHint.classList.add('hidden');
+                idleHint.classList.remove('fade-in');
+            }
+
+            if (endingAudio && !endingAudio.paused) {
+                fadeOutAudio(endingAudio, 1000, () => {
+                    endingAudio.pause();
+                    endingAudio.currentTime = 0;
+                    endingAudio = null;
+                });
+            }
+
+            if (currentPage === 'page1' && pageId !== 'page1') {
+                const introAudio = document.getElementById('intro-audio');
+                if (introAudio && !introAudio.paused) {
+                    fadeOutAudio(introAudio, 1000, () => {
+                        introAudio.currentTime = 0;
+                        introAudio.pause();
+                    });
+                }
+            }
+
+            const questionAudio = document.getElementById('question-audio');
+            if (questionAudio && !questionAudio.paused) {
+                fadeOutAudio(questionAudio, 1000);
+            }
+            if (currentAudio) {
+                fadeOutCurrentAudio(currentAudio);
+            }
+            
+            stopAllResultAudios();
+            
+            if (countdownTimer) {
+                clearInterval(countdownTimer);
+                countdownTimer = null;
+            }
+            
+            document.querySelectorAll('.page').forEach(page => {
+                page.classList.remove('active');
+            });
+            document.getElementById(pageId).classList.add('active');
+            currentPage = pageId;
+            
+            if (pageId === 'page2') {
+                showVocabPage(1);
+            } else if (pageId === 'page3') {
+                resetPractice();
+            } else if (pageId === 'page4') {
+                resetQuestions();
+            }
+        }
+
+        // Vocabulary page functions
+        function showVocabPage(pageNum) {
+            currentVocabPage = pageNum;
+            
+            for (let i = 1; i <= 5; i++) {
+                const btn = document.getElementById(`vocab-nav-${i}`);
+                if (i === pageNum) {
+                    btn.className = 'nav-button bg-blue-500 text-white';
+                } else {
+                    btn.className = 'nav-button bg-gray-400 text-white';
+                }
+            }
+            
+            const content = document.getElementById('vocab-content');
+            const vocabs = vocabularyData[pageNum] || [];
+            
+            let html = '<div class="grid grid-cols-3 gap-x-1 h-full" style="gap-y: 0.125rem;">';
+            
+            for (let i = 0; i < Math.min(3, vocabs.length); i++) {
+                html += createVocabularyCard(vocabs[i], i);
+            }
+            
+            for (let i = 3; i < vocabs.length; i++) {
+                html += createVocabularyCard(vocabs[i], i);
+            }
+            
+            html += '</div>';
+            content.innerHTML = html;
+            
+            vocabs.forEach(vocab => {
+                if (vocab.audio) {
+                    const audio = new Audio();
+                    audio.preload = 'auto';
+                    audio.src = vocab.audio;
+                }
+            });
+        }
+
+        function createVocabularyCard(vocab, index) {
+            return `
+                <div class="vocabulary-card flex flex-col items-center p-3" style="height: clamp(240px, 32vh, 340px);">
+                    <div class="w-full flex items-center justify-center mb-1 overflow-hidden" style="height: calc(100% - 70px); min-height: 160px; max-height: 270px;">
+                        <img src="${vocab.image}" alt="${vocab.korean}" class="max-w-full max-h-full object-contain" 
+                             oncontextmenu="return false;" ondragstart="return false;">
+                    </div>
+                    <button onclick="playVocabAudio('${vocab.audio}', ${index})" 
+                            class="btn-primary btn-hover py-2 mb-1 flex items-center justify-center min-w-0 w-full" 
+                            style="white-space: nowrap; height: 40px;">
+                        <svg class="flex-shrink-0 mr-1" id="speaker-${index}" viewBox="0 0 24 24" fill="currentColor" style="width: 20px; height: 20px;">
+                            <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
+                        </svg>
+                        <span class="font-bold overflow-hidden text-ellipsis min-w-0" style="font-size: clamp(12px, 4vw, 18px);">${vocab.korean}</span>
+                    </button>
+                    <p class="text-center text-gray-600 text-sm px-1" style="height: 20px; line-height: 20px;">${vocab.chinese}</p>
+                </div>
+            `;
+        }
+
+        function playVocabAudio(audioUrl, index) {
+            if (currentAudio) {
+                currentAudio.pause();
+                document.querySelectorAll('[id^="speaker-"]').forEach(icon => {
+                    icon.style.color = '';
+                    icon.style.animation = '';
+                    icon.innerHTML = `<path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>`;
+                });
+            }
+            
+            const speakerIcon = document.getElementById(`speaker-${index}`);
+            speakerIcon.style.color = '#22c55e'; 
+            
+            const originalPath = `<path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>`;
+            const noWavePath = `<path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/>`;
+            const oneWavePath = `<path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>`;
+            const twoWavePath = `<path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77zM19 12c0-2.76-1.46-5.18-3.64-6.53v1.8c1.47 1.07 2.64 2.89 2.64 4.73 0 1.84-1.17 3.66-2.64 4.73v1.8C17.54 17.18 19 14.76 19 12z"/>`;
+            
+            const wavePaths = [noWavePath, oneWavePath, twoWavePath];
+            let currentWaveIndex = 0;
+            
+            const waveInterval = setInterval(() => {
+                if (speakerIcon) {
+                    speakerIcon.innerHTML = wavePaths[currentWaveIndex];
+                    currentWaveIndex = (currentWaveIndex + 1) % 3;
+                }
+            }, 200);
+            
+            currentAudio = new Audio(audioUrl);
+            currentAudio.play();
+            
+            currentAudio.onended = () => {
+                clearInterval(waveInterval);
+                speakerIcon.style.color = ''; 
+                speakerIcon.innerHTML = originalPath; 
+                currentAudio = null;
+            };
+        }
+
+        // Practice functions
+        function playPracticeAudio(audioUrl, buttonElement) {
+            if (currentAudio) {
+                currentAudio.pause();
+                document.querySelectorAll('.draggable .speaker-icon').forEach(icon => {
+                    icon.style.color = '';
+                    icon.style.animation = '';
+                    icon.innerHTML = `<path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>`;
+                });
+            }
+            
+            const speakerIcon = buttonElement.querySelector('.speaker-icon');
+            speakerIcon.style.color = '#22c55e'; 
+            
+            const originalPath = `<path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>`;
+            const noWavePath = `<path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/>`;
+            const oneWavePath = `<path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>`;
+            const twoWavePath = `<path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77zM19 12c0-2.76-1.46-5.18-3.64-6.53v1.8c1.47 1.07 2.64 2.89 2.64 4.73 0 1.84-1.17 3.66-2.64 4.73v1.8C17.54 17.18 19 14.76 19 12z"/>`;
+            
+            const wavePaths = [noWavePath, oneWavePath, twoWavePath];
+            let currentWaveIndex = 0;
+            
+            const waveInterval = setInterval(() => {
+                if (speakerIcon) {
+                    speakerIcon.innerHTML = wavePaths[currentWaveIndex];
+                    currentWaveIndex = (currentWaveIndex + 1) % 3;
+                }
+            }, 200);
+            
+            currentAudio = new Audio(audioUrl);
+            currentAudio.play();
+            
+            currentAudio.onended = () => {
+                clearInterval(waveInterval);
+                speakerIcon.style.color = ''; 
+                speakerIcon.innerHTML = originalPath; 
+                currentAudio = null;
+            };
+        }
+
+        function resetPractice() {
+            currentPracticeQuestion = 1;
+            practiceAnswers = {};
+            practiceCompleted = false;
+            
+            const correctSound = new Audio('https://mon-ami.up.seesaa.net/topik/SE_Correct.mp3');
+            const wrongSound = new Audio('https://mon-ami.up.seesaa.net/topik/SE_Wrong.mp3');
+            const cheeringSound = new Audio('https://mon-ami.up.seesaa.net/topik/SE_Cheering.mp3');
+            correctSound.preload = 'auto';
+            wrongSound.preload = 'auto';
+            cheeringSound.preload = 'auto';
+            
+            updatePracticeStatus();
+            loadPracticeQuestion(1);
+            createPracticeNavigation();
+        }
+
+        function loadPracticeQuestion(questionNum) {
+            currentPracticeQuestion = questionNum;
+            const question = practiceQuestions[questionNum - 1];
+            
+            if (!question) return;
+            
+            updatePracticeStatus();
+            
+            const shuffledVocabs = [...question.vocabularies].sort(() => Math.random() - 0.5);
+            
+            const content = document.getElementById('practice-content');
+            
+            let html = `
+                <div class="h-full flex flex-col">
+                    <div class="flex-1 grid grid-cols-3 gap-3 mb-1">
+            `;
+            
+            question.vocabularies.forEach((vocab, index) => {
+                html += `
+                    <div class="flex flex-col items-center h-full">
+                        <div class="bg-white rounded-xl shadow-lg p-1 w-full flex flex-col items-center" style="height: 380px; margin-top: -20px;">
+                            <div class="w-full flex items-center justify-center mb-1" style="height: 300px;">
+                                <img src="${vocab.image}" alt="${vocab.korean}" class="max-w-full max-h-full object-contain"
+                                     oncontextmenu="return false;" ondragstart="return false;">
+                            </div>
+                            <div class="drag-zone dropzone" data-correct="${vocab.korean}" style="margin-top: 8px;">
+                                Drop<br>Here
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            html += `
+                    </div>
+                    <div class="flex justify-center gap-4 mobile-nav-up" id="options" style="--original-top: 76%; position: absolute; top: 76%; left: 0; right: 0; height: 5%;">
+            `;
+            
+            shuffledVocabs.forEach((vocab, index) => {
+                // 修改點 1: class 改為 btn-water
+                // 修改點 2: 將 svg 包在 div.audio-trigger-zone 裡面，並加上 onclick="event.stopPropagation();"
+                // 這樣做可以確保點擊圖示時只播放聲音，絕對不干擾拖曳
+                html += `
+                    <button class="btn-water btn-hover px-2 py-2 draggable flex items-center whitespace-nowrap" 
+                            data-vocab="${vocab.korean}">
+                        
+                        <div class="audio-trigger-zone">
+                            <svg class="speaker-icon flex-shrink-0" viewBox="0 0 24 24" fill="currentColor" style="width: 24px; height: 24px;">
+                                <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
+                            </svg>
+                        </div>
+
+                        <span class="font-bold min-w-0 overflow-hidden text-ellipsis px-2" style="font-size: clamp(12px, 3vw, 16px); pointer-events: none;">${vocab.korean}</span>
+                    </button>
+                `;
+            });
+            
+            html += `
+                    </div>
+                </div>
+            `;
+            
+            content.innerHTML = html;
+            
+            question.vocabularies.forEach(vocab => {
+                if (vocab.audio) {
+                    const audio = new Audio();
+                    audio.preload = 'auto';
+                    audio.src = vocab.audio;
+                }
+            });
+            
+            document.querySelectorAll('.draggable').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const vocab = shuffledVocabs.find(v => v.korean === btn.dataset.vocab);
+                    if (vocab) {
+                        playPracticeAudio(vocab.audio, btn);
+                    }
+                });
+            });
+            
+            setTimeout(() => {
+                new Sortable(document.getElementById('options'), {
+                    group: 'quiz',
+                    animation: 150,
+                    onEnd: function(evt) {
+                        if (evt.to.classList.contains('dropzone')) {
+                            handleDrop(evt.item, evt.to);
+                        }
+                    }
+                });
+                
+                document.querySelectorAll('.dropzone').forEach(zone => {
+                    new Sortable(zone, {
+                        group: 'quiz',
+                        animation: 150,
+                        onAdd: function(evt) {
+                            handleDrop(evt.item, evt.to);
+                        }
+                    });
+                });
+            }, 100);
+            
+            updatePracticeNavigation();
+        }
+
+        function createPracticeNavigation() {
+            const nav = document.getElementById('practice-nav');
+            let html = '';
+            
+            for (let i = 1; i <= practiceQuestions.length; i++) {
+                let className = 'nav-button bg-gray-400 text-white';
+                
+                if (i === currentPracticeQuestion) {
+                    className += ' current';
+                }
+                
+                if (practiceAnswers[i]) {
+                    const question = practiceQuestions[i - 1];
+                    const totalVocabs = question.vocabularies.length;
+                    const correctAnswers = Object.entries(practiceAnswers[i])
+                        .filter(([key, value]) => key !== '_completed' && value === true)
+                        .length;
+                    
+                    if (correctAnswers === totalVocabs) {
+                        className = 'nav-button bg-green-500 text-white';
+                    } else if (correctAnswers > 0) {
+                        className = 'nav-button bg-yellow-500 text-white';
+                    } else {
+                        className = 'nav-button bg-red-500 text-white';
+                    }
+                    
+                    if (i === currentPracticeQuestion) {
+                        className += ' current';
+                    }
+                }
+                
+                html += `<button onclick="loadPracticeQuestion(${i})" class="${className}">${i}</button>`;
+            }
+            
+            nav.innerHTML = html;
+        }
+
+        function updatePracticeNavigation() {
+            createPracticeNavigation();
+        }
+
+        function updatePracticeStatus() {
+            document.getElementById('practice-current').textContent = currentPracticeQuestion;
+            
+            let correctCount = 0;
+            let totalScore = 0;
+            
+            Object.values(practiceAnswers).forEach(questionAnswers => {
+                Object.entries(questionAnswers).forEach(([key, value]) => {
+                    if (key !== '_completed' && value === true) {
+                        correctCount++;
+                    }
+                });
+            });
+            
+            const totalVocabs = practiceQuestions.reduce((sum, q) => sum + q.vocabularies.length, 0);
+            totalScore = Math.round((correctCount / totalVocabs) * 100);
+            
+            document.getElementById('practice-correct').textContent = correctCount;
+            document.getElementById('practice-score').textContent = totalScore;
+        }
+
+        function handleDrop(item, dropzone) {
+            const vocab = item.dataset.vocab;
+            const correctAnswer = dropzone.dataset.correct;
+            const isCorrect = vocab === correctAnswer;
+            
+            dropzone.innerHTML = '';
+            dropzone.classList.add('filled');
+            if (!isCorrect) {
+                dropzone.classList.add('incorrect');
+            }
+            dropzone.innerHTML = `<span class="font-bold" style="font-size: clamp(12px, 3vw, 16px);">${vocab}</span>`;
+            item.remove();
+            
+            if (!practiceAnswers[currentPracticeQuestion]) {
+                practiceAnswers[currentPracticeQuestion] = {};
+            }
+            
+            practiceAnswers[currentPracticeQuestion][correctAnswer] = isCorrect;
+            
+            showPracticeFeedback(isCorrect);
+            
+            const question = practiceQuestions[currentPracticeQuestion - 1];
+            const answeredCount = Object.keys(practiceAnswers[currentPracticeQuestion]).length;
+            
+            if (answeredCount === question.vocabularies.length) {
+                if (practiceAnswers[currentPracticeQuestion]._completed) return;
+                practiceAnswers[currentPracticeQuestion]._completed = true;
+
+                setTimeout(() => {
+                    if (currentPracticeQuestion < practiceQuestions.length) {
+                        loadPracticeQuestion(currentPracticeQuestion + 1);
+                    } else {
+                        showPracticeResults();
+                    }
+                }, 1500);
+            }
+            
+            updatePracticeStatus();
+        }
+
+        function showPracticeFeedback(isCorrect) {
+            const feedback = document.getElementById('practice-feedback');
+            const korean = document.getElementById('practice-feedback-korean');
+            const english = document.getElementById('practice-feedback-english');
+            
+            if (isCorrect) {
+                korean.textContent = '정답입니다!';
+                korean.className = 'text-2xl font-bold mb-1 text-blue-600';
+                english.textContent = '(Correct Answer!)';
+                playAudio('https://mon-ami.up.seesaa.net/topik/SE_Correct.mp3');
+            } else {
+                korean.textContent = '정답이 아닙니다!';
+                korean.className = 'text-2xl font-bold mb-1 text-red-600';
+                english.textContent = '(Wrong Answer!)';
+                playAudio('https://mon-ami.up.seesaa.net/topik/SE_Wrong.mp3');
+            }
+            
+            feedback.classList.remove('hidden');
+            
+            setTimeout(() => {
+                feedback.classList.add('hidden');
+            }, 2000);
+        }
+
+        function showPracticeResults() {
+            let correctCount = 0;
+            let totalVocabs = 0;
+            let resultsHtml = '<div class="grid grid-cols-3 gap-4 mb-6">';
+            
+            practiceQuestions.forEach((question, qIndex) => {
+                resultsHtml += `<div class="bg-gray-50 p-4 rounded-lg">`;
+                resultsHtml += `<h3 class="font-bold text-lg mb-2 text-blue-800">Q${qIndex + 1}</h3>`;
+                
+                question.vocabularies.forEach(vocab => {
+                    totalVocabs++;
+                    const isCorrect = practiceAnswers[qIndex + 1] && practiceAnswers[qIndex + 1][vocab.korean];
+                    if (isCorrect) correctCount++;
+                    
+                    const symbol = isCorrect ? '〇' : '×';
+                    resultsHtml += `<div class="mb-1">${vocab.korean} (${vocab.chinese}): ${symbol}</div>`;
+                });
+                
+                resultsHtml += `</div>`;
+            });
+            
+            resultsHtml += '</div>';
+            
+            const totalScore = Math.round((correctCount / totalVocabs) * 100);
+            let gradeMessage = '';
+            
+            if (totalScore >= 80) {
+                gradeMessage = `
+                    <div class="text-center mb-6">
+                        <div class="text-3xl font-bold text-green-600 mb-2">훌륭합니다!</div>
+                        <div class="text-xl text-green-500">(Excellent!)</div>
+                        <div class="text-2xl font-bold mt-4">점수: ${totalScore}점</div>
+                    </div>
+                `;
+                createConfetti();
+                playAudio('https://mon-ami.up.seesaa.net/topik/SE_Cheering.mp3');
+            } else {
+                gradeMessage = `
+                    <div class="text-center mb-6">
+                        <div class="text-3xl font-bold text-blue-600 mb-2">더 열심히 하세요!</div>
+                        <div class="text-xl text-blue-500">(Keep trying!)</div>
+                        <div class="text-2xl font-bold mt-4">점수: ${totalScore}점</div>
+                    </div>
+                `;
+            }
+            
+            document.getElementById('practice-results-content').innerHTML = gradeMessage + resultsHtml;
+            showPage('practice-results');
+            practiceCompleted = true;
+        }
+
+        // Questions functions
+        function resetQuestions() {
+            currentQuestion = 1;
+            questionAnswers = {};
+            audioSpeed = 1.0;
+            captionsEnabled = false;
+            
+            document.getElementById('speed-50').classList.remove('active');
+            document.getElementById('speed-75').classList.remove('active');
+            document.getElementById('captions-btn').classList.remove('active');
+            document.getElementById('subtitles').style.visibility = 'hidden';
+            
+            updateQuestionStatus();
+            loadQuestion(1);
+            createQuestionNavigation();
+        }
+
+        function loadQuestion(questionNum) {
+            currentQuestion = questionNum;
+            const question = questionsData[questionNum - 1];
+            
+            if (!question) return;
+            
+            updateQuestionStatus();
+            
+            const audio = document.getElementById('question-audio');
+            const track = document.getElementById('audio-track');
+            
+            audio.src = question.audio;
+            track.src = question.vtt;
+            audio.playbackRate = audioSpeed;
+            
+            let lastKnownTime = 0;
+            
+            const newAudio = audio.cloneNode(true);
+            audio.parentNode.replaceChild(newAudio, audio);
+            const cleanAudio = document.getElementById('question-audio');
+            
+            const newTrack = cleanAudio.querySelector('track');
+            if (newTrack) newTrack.src = question.vtt;
+            
+            cleanAudio.addEventListener('timeupdate', () => {
+                if (!cleanAudio.seeking) {
+                    lastKnownTime = cleanAudio.currentTime;
+                }
+            });
+            
+            cleanAudio.addEventListener('seeking', () => {
+                if (Math.abs(cleanAudio.currentTime - lastKnownTime) > 0.5) {
+                    cleanAudio.currentTime = lastKnownTime;
+                }
+            });
+            
+            setupSubtitleTracking(cleanAudio, newTrack);
+            
+            const shuffledImages = [...question.images].sort(() => Math.random() - 0.5);
+            
+            const topContainer = document.getElementById('question-images-top');
+            let topHtml = '';
+            for (let i = 0; i < 2; i++) {
+                const originalIndex = question.images.indexOf(shuffledImages[i]);
+                topHtml += `
+                    <div class="image-option w-1/2 h-full" onclick="selectAnswer(${originalIndex})" oncontextmenu="return false;">
+                        <img src="${shuffledImages[i]}" alt="Option ${i + 1}" 
+                             class="w-full h-full object-contain"
+                             oncontextmenu="return false;" ondragstart="return false;">
+                    </div>
+                `;
+            }
+            topContainer.innerHTML = topHtml;
+            
+            const bottomContainer = document.getElementById('question-images-bottom');
+            let bottomHtml = '';
+            for (let i = 2; i < 4; i++) {
+                const originalIndex = question.images.indexOf(shuffledImages[i]);
+                bottomHtml += `
+                    <div class="image-option w-1/2 h-full" onclick="selectAnswer(${originalIndex})" oncontextmenu="return false;">
+                        <img src="${shuffledImages[i]}" alt="Option ${i + 1}" 
+                             class="w-full h-full object-contain"
+                             oncontextmenu="return false;" ondragstart="return false;">
+                    </div>
+                `;
+            }
+            bottomContainer.innerHTML = bottomHtml;
+            
+            startQuestionCountdown();
+            updateQuestionNavigation();
+        }
+
+        function createQuestionNavigation() {
+            const nav = document.getElementById('question-nav');
+            let html = '';
+            
+            for (let i = 1; i <= questionsData.length; i++) {
+                let className = 'nav-button bg-gray-400 text-white';
+                
+                if (i === currentQuestion) {
+                    className += ' current';
+                }
+                
+                if (questionAnswers[i] !== undefined) {
+                    if (questionAnswers[i].correct) {
+                        className = 'nav-button bg-green-500 text-white';
+                    } else if (questionAnswers[i].timeout) {
+                        className = 'nav-button bg-yellow-500 text-white';
+                    } else {
+                        className = 'nav-button bg-red-500 text-white';
+                    }
+                    
+                    if (i === currentQuestion) {
+                        className += ' current';
+                    }
+                }
+                
+                html += `<button onclick="loadQuestion(${i})" class="${className}">${i}</button>`;
+            }
+            
+            nav.innerHTML = html;
+        }
+
+        function updateQuestionNavigation() {
+            createQuestionNavigation();
+        }
+
+        function updateQuestionStatus() {
+            document.getElementById('question-current').textContent = currentQuestion;
+            
+            const correctCount = Object.values(questionAnswers).filter(a => a.correct).length;
+            const totalScore = Math.round((correctCount / questionsData.length) * 100);
+            
+            document.getElementById('question-correct').textContent = correctCount;
+            document.getElementById('question-score').textContent = totalScore;
+        }
+
+        function startQuestionCountdown() {
+            let countdown = 5;
+            const countdownContainer = document.getElementById('countdown-container');
+            const countdownDisplay = document.getElementById('countdown-display');
+            const countdownCircle = document.getElementById('countdown-circle');
+            const audio = document.getElementById('question-audio');
+            
+            const subtitles = document.getElementById('subtitles');
+            const kText = document.getElementById('subtitle-korean');
+            const cText = document.getElementById('subtitle-chinese');
+            
+            subtitles.style.visibility = 'visible';
+            kText.textContent = '다음을 듣고 가장 알맞은 그림을 고르십시오.';
+            cText.textContent = '(Listen to the following dialogue and choose the best picture.)';
+            
+            countdownContainer.classList.remove('hidden');
+            countdownDisplay.className = 'countdown countdown-large text-gray-400';
+            countdownDisplay.style.textShadow = '0 0 20px #9ca3af';
+            countdownDisplay.textContent = countdown;
+            countdownCircle.style.color = '#9ca3af';
+            
+            countdownCircle.style.animation = 'none';
+            countdownCircle.offsetHeight; 
+            countdownCircle.style.animation = 'drawCircle 1s ease-out forwards';
+            
+            countdownTimer = setInterval(() => {
+                countdown--;
+                if (countdown > 0) {
+                    countdownDisplay.textContent = countdown;
+                    countdownCircle.style.animation = 'none';
+                    countdownCircle.offsetHeight; 
+                    countdownCircle.style.animation = 'drawCircle 1s ease-out forwards';
+                    countdownDisplay.style.animation = 'pulse 1s ease-in-out';
+                    setTimeout(() => {
+                        countdownDisplay.style.animation = '';
+                    }, 1000);
+                } else {
+                    clearInterval(countdownTimer);
+                    
+                    countdownContainer.style.transition = 'opacity 1s ease-out';
+                    countdownContainer.style.opacity = '0';
+                    
+                    setTimeout(() => {
+                        countdownContainer.classList.add('hidden');
+                        countdownContainer.style.opacity = '1';
+                        countdownContainer.style.transition = '';
+                    }, 1000);
+                    
+                    if (!captionsEnabled) {
+                        subtitles.style.visibility = 'hidden';
+                    }
+                    kText.textContent = '';
+                    cText.textContent = '';
+                    
+                    // Task 3 FIX: Prevent audio play if question is already answered
+                    if (questionAnswers[currentQuestion]) return;
+
+                    audio.play();
+                    
+                    audio.onended = () => {
+                        startAnswerCountdown();
+                    };
+                }
+            }, 1000);
+        }
+
+        function startAnswerCountdown() {
+            let countdown = 15;
+            const countdownContainer = document.getElementById('countdown-container');
+            const countdownDisplay = document.getElementById('countdown-display');
+            const countdownCircle = document.getElementById('countdown-circle');
+            
+            countdownContainer.classList.remove('hidden');
+            countdownDisplay.className = 'countdown countdown-small text-blue-500';
+            countdownDisplay.style.textShadow = '0 0 20px #3b82f6';
+            countdownDisplay.textContent = countdown;
+            countdownCircle.style.color = '#3b82f6';
+            
+            countdownCircle.style.animation = 'none';
+            countdownCircle.offsetHeight; 
+            countdownCircle.style.animation = 'drawCircle 1s ease-out forwards';
+            
+            countdownTimer = setInterval(() => {
+                countdown--;
+                
+                if (countdown > 5) {
+                    countdownDisplay.className = 'countdown countdown-small text-blue-500';
+                    countdownDisplay.style.textShadow = '0 0 20px #3b82f6';
+                    countdownCircle.style.color = '#3b82f6';
+                } else if (countdown >= 1) {
+                    countdownDisplay.className = 'countdown countdown-small text-red-500';
+                    countdownDisplay.style.textShadow = '0 0 20px #ef4444';
+                    countdownCircle.style.color = '#ef4444';
+                    
+                    countdownDisplay.style.transform = 'scale(1.5)';
+                    countdownDisplay.style.transition = 'transform 1s ease-out';
+                    
+                    setTimeout(() => {
+                        countdownDisplay.style.transform = 'scale(1)';
+                    }, 100);
+                }
+                
+                if (countdown > 0) {
+                    countdownDisplay.textContent = countdown;
+                    countdownCircle.style.animation = 'none';
+                    countdownCircle.offsetHeight; 
+                    countdownCircle.style.animation = 'drawCircle 1s ease-out forwards';
+                } else {
+                    clearInterval(countdownTimer);
+                    
+                    countdownContainer.style.transition = 'opacity 1s ease-out';
+                    countdownContainer.style.opacity = '0';
+                    
+                    setTimeout(() => {
+                        countdownContainer.classList.add('hidden');
+                        countdownContainer.style.opacity = '1';
+                        countdownContainer.style.transition = '';
+                    }, 1000);
+                    
+                    if (!questionAnswers[currentQuestion]) {
+                        questionAnswers[currentQuestion] = { correct: false, timeout: true };
+                        showQuestionFeedback('timeout');
+                        updateQuestionStatus();
+                        
+                        setTimeout(() => {
+                            if (currentQuestion < questionsData.length) {
+                                loadQuestion(currentQuestion + 1);
+                            } else {
+                                showQuestionResults();
+                            }
+                        }, 2000);
+                    }
+                }
+            }, 1000);
+        }
+
+        function selectAnswer(answerIndex) {
+            if (questionAnswers[currentQuestion]) return; 
+            
+            if (countdownTimer) {
+                clearInterval(countdownTimer);
+                countdownTimer = null;
+            }
+            
+            const audio = document.getElementById('question-audio');
+            let audioStopped = true;
+            if (!audio.paused) {
+                if (currentQuestion === questionsData.length) {
+                    audio.pause();
+                    audio.currentTime = 0;
+                    audioStopped = true;
+                } else {
+                    audioStopped = false;
+                    fadeOutAudio(audio, 100, () => {
+                        audioStopped = true;
+                    });
+                }
+            } else {
+                // Task 3: Force ensure audio is paused/reset even if not playing (in case of countdown finish race condition)
+                 if (currentQuestion === questionsData.length) {
+                    audio.pause();
+                    audio.currentTime = 0;
+                    audioStopped = true;
+                }
+            }
+            
+            const question = questionsData[currentQuestion - 1];
+            const isCorrect = answerIndex === question.correct;
+            
+            questionAnswers[currentQuestion] = { correct: isCorrect, timeout: false };
+            
+            showQuestionFeedback(isCorrect ? 'correct' : 'wrong');
+            updateQuestionStatus();
+            
+            const checkAudioStopped = () => {
+                if (audioStopped) {
+                    if (currentQuestion < questionsData.length) {
+                        loadQuestion(currentQuestion + 1);
+                    } else {
+                        showQuestionResults();
+                    }
+                } else {
+                    setTimeout(checkAudioStopped, 100);
+                }
+            };
+            
+            setTimeout(checkAudioStopped, 2000);
+        }
+
+        function showQuestionFeedback(type) {
+            const feedback = document.getElementById('question-feedback');
+            const korean = document.getElementById('question-feedback-korean');
+            const english = document.getElementById('question-feedback-english');
+            const countdownContainer = document.getElementById('countdown-container');
+            
+            countdownContainer.classList.add('hidden');
+            
+            if (type === 'correct') {
+                korean.textContent = '정답입니다!';
+                korean.className = 'text-2xl font-bold mb-1 text-blue-600';
+                english.textContent = '(Correct Answer!)';
+                playAudio('https://mon-ami.up.seesaa.net/topik/SE_Correct.mp3');
+            } else if (type === 'wrong') {
+                korean.textContent = '정답이 아닙니다!';
+                korean.className = 'text-2xl font-bold mb-1 text-red-600';
+                english.textContent = '(Wrong Answer!)';
+                playAudio('https://mon-ami.up.seesaa.net/topik/SE_Wrong.mp3');
+            } else if (type === 'timeout') {
+                korean.textContent = '타임업입니다!';
+                korean.className = 'text-2xl font-bold mb-1 text-red-600';
+                english.textContent = '(Time\'s Up!)';
+                playAudio('https://mon-ami.up.seesaa.net/topik/SE_Wrong.mp3');
+            }
+            
+            feedback.classList.remove('hidden');
+            
+            setTimeout(() => {
+                feedback.classList.add('hidden');
+            }, 2000);
+        }
+
+        function showQuestionResults() {
+            const questionAudio = document.getElementById('question-audio');
+            if (questionAudio && !questionAudio.paused) {
+                questionAudio.pause();
+                questionAudio.currentTime = 0;
+            }
+            if (currentAudio) {
+                currentAudio.pause();
+                currentAudio.currentTime = 0;
+                currentAudio = null;
+            }
+            
+            if (audioTimer) {
+                clearInterval(audioTimer);
+                audioTimer = null;
+            }
+            
+            const correctCount = Object.values(questionAnswers).filter(a => a.correct).length;
+            const totalScore = Math.round((correctCount / questionsData.length) * 100);
+            
+            let gradeMessage = '';
+            
+            if (totalScore >= 80) {
+                gradeMessage = `
+                    <div class="text-center mb-2">
+                        <div class="text-3xl font-bold text-green-600 mb-0">훌륭합니다!</div>
+                        <div class="text-xl text-green-500 mb-1">(Excellent!)</div>
+                        <div class="text-2xl font-bold">점수: ${totalScore}점</div>
+                    </div>
+                `;
+                createConfetti();
+                setTimeout(() => {
+                    playAudio('https://mon-ami.up.seesaa.net/topik/SE_Cheering.mp3');
+                }, 200);
+            } else {
+                gradeMessage = `
+                    <div class="text-center mb-2">
+                        <div class="text-3xl font-bold text-blue-600 mb-0">더 열심히 하세요!</div>
+                        <div class="text-xl text-blue-500 mb-1">(Keep trying!)</div>
+                        <div class="text-2xl font-bold">점수: ${totalScore}점</div>
+                    </div>
+                `;
+            }
+            
+            let practiceCorrectCount = 0;
+            let practiceAnsweredCount = 0;
+            let practiceTotalCount = 0;
+            
+            practiceQuestions.forEach((question, qIndex) => {
+                question.vocabularies.forEach(vocab => {
+                    practiceTotalCount++;
+                    if (practiceAnswers[qIndex + 1] && practiceAnswers[qIndex + 1][vocab.korean] !== undefined) {
+                        practiceAnsweredCount++;
+                        if (practiceAnswers[qIndex + 1][vocab.korean] === true) {
+                            practiceCorrectCount++;
+                        }
+                    }
+                });
+            });
+            
+            const practiceStatusHtml = `<div class="text-center mb-2 font-bold">PRACTICE: ${practiceCorrectCount} / ${practiceAnsweredCount} / ${practiceTotalCount} 어휘</div>`;
+            
+            const resultsHtml = createDetailedResults();
+            
+            document.getElementById('question-results-content').innerHTML = gradeMessage + practiceStatusHtml + resultsHtml;
+            showPage('question-results');
+
+            if (!endingAudio) {
+                setTimeout(() => {
+                    endingAudio = new Audio('https://mon-ami.up.seesaa.net/topik/SE_Ending.mp3');
+                    endingAudio.play().catch(e => console.log("Ending audio failed:", e));
+                }, 1000); 
+            }
+            
+            setTimeout(() => {
+                sendResultToEmail();
+            }, 100);
+        }
+
+// Email function
+function sendResultToEmail() {
+            // Ensure all audio is completely stopped before sending email
+            const questionAudio = document.getElementById('question-audio');
+            if (questionAudio && !questionAudio.paused) {
+                questionAudio.pause();
+                questionAudio.currentTime = 0;
+            }
+            if (currentAudio) {
+                currentAudio.pause();
+                currentAudio.currentTime = 0;
+                currentAudio = null;
+            }
+            
+            // Clear any remaining audio timers
+            if (audioTimer) {
+                clearInterval(audioTimer);
+                audioTimer = null;
+            }
+            
+            const emailAddress = 'kiyoshihikawa3@gmail.com';
+            const subject = 'TOPIK I Listening QUESTIONS Result (後測)';
+            
+            const correctCount = Object.values(questionAnswers).filter(a => a.correct).length;
+            const totalScore = Math.round((correctCount / questionsData.length) * 100);
+            
+            let body = `TOPIK I Listening Test QUESTIONS (기출문제/過去問題)：\n\n`;
+            body += `Total Score：${totalScore} Points\n`;
+            body += `Correct Answers：${correctCount} / ${questionsData.length}\n\n`;
+            
+            body += `Answering Details：\n`;
+            questionsData.forEach((question, index) => {
+                const answer = questionAnswers[index + 1];
+                if (answer) {
+                    if (answer.timeout) {
+                        body += `Q ${index + 1}： Time's Up\n`;
+                    } else {
+                        body += `Q ${index + 1}：${answer.correct ? '〇' : '×'}\n`;
+                    }
+                } else {
+                    body += `Q ${index + 1}： Not Answered\n`;
+                }
+            });
+            
+            // Calculate practice statistics for email
+            let emailPracticeCorrect = 0;
+            let emailPracticeAnswered = 0;
+            let emailPracticeTotal = 0;
+            
+            practiceQuestions.forEach((question, qIndex) => {
+                question.vocabularies.forEach(vocab => {
+                    emailPracticeTotal++;
+                    if (practiceAnswers[qIndex + 1] && practiceAnswers[qIndex + 1][vocab.korean] !== undefined) {
+                        emailPracticeAnswered++;
+                        if (practiceAnswers[qIndex + 1][vocab.korean] === true) {
+                            emailPracticeCorrect++;
+                        }
+                    }
+                });
+            });
+            
+            body += `\nPRACTICE: ${emailPracticeCorrect} / ${emailPracticeAnswered} / ${emailPracticeTotal} VOCABULARIES\n`;
+            
+            try {
+                const mailtoLink = `mailto:${emailAddress}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+                
+                // ▼▼▼ 修改這裡 (原本是 window.open) ▼▼▼
+                window.location.href = mailtoLink;
+                // ▲▲▲ 修改結束 ▲▲▲
+                
+                // Double-check audio is stopped after email launch
+                setTimeout(() => {
+                    const questionAudio = document.getElementById('question-audio');
+                    if (questionAudio && !questionAudio.paused) {
+                        questionAudio.pause();
+                        questionAudio.currentTime = 0;
+                    }
+                    if (currentAudio) {
+                        currentAudio.pause();
+                        currentAudio.currentTime = 0;
+                        currentAudio = null;
+                    }
+                }, 500);
+                
+            } catch (e) {
+                console.error('發送郵件失敗:', e);
+            }
+        }
+
+        // Subtitle tracking function (Unchanged)
+        function setupSubtitleTracking(audio, track) {
+            document.getElementById('subtitle-korean').textContent = '';
+            document.getElementById('subtitle-chinese').textContent = '';
+            
+            if (track.src) {
+                fetch(track.src)
+                    .then(response => response.text())
+                    .then(vttText => {
+                        const cues = parseVTT(vttText);
+                        
+                        audio.addEventListener('timeupdate', () => {
+                            if (captionsEnabled) {
+                                const currentTime = audio.currentTime;
+                                const activeCue = cues.find(cue => 
+                                    currentTime >= cue.start && currentTime <= cue.end
+                                );
+                                
+                                if (activeCue) {
+                                    const lines = activeCue.text.split('\n');
+                                    document.getElementById('subtitle-korean').textContent = lines[0] || '';
+                                    document.getElementById('subtitle-chinese').textContent = lines[1] || '';
+                                } else {
+                                    document.getElementById('subtitle-korean').textContent = '';
+                                    document.getElementById('subtitle-chinese').textContent = '';
+                                }
+                            }
+                        });
+                    })
+                    .catch(err => console.log('VTT loading failed:', err));
+            }
+        }
+        
+        function parseVTT(vttText) {
+            const cues = [];
+            const lines = vttText.split('\n');
+            let i = 0;
+            
+            while (i < lines.length) {
+                if (lines[i].includes('-->')) {
+                    const timeLine = lines[i];
+                    const times = timeLine.split(' --> ');
+                    const start = parseTime(times[0]);
+                    const end = parseTime(times[1]);
+                    
+                    i++;
+                    let text = '';
+                    while (i < lines.length && lines[i].trim() !== '') {
+                        if (text) text += '\n';
+                        text += lines[i];
+                        i++;
+                    }
+                    
+                    cues.push({ start, end, text });
+                }
+                i++;
+            }
+            
+            return cues;
+        }
+        
+        function parseTime(timeStr) {
+            const parts = timeStr.split(':');
+            const seconds = parts[parts.length - 1].split(',')[0];
+            const minutes = parts[parts.length - 2] || 0;
+            const hours = parts[parts.length - 3] || 0;
+            
+            return parseInt(hours) * 3600 + parseInt(minutes) * 60 + parseFloat(seconds);
+        }
+
+        function playAudio(audioUrl) {
+            if (currentAudio) {
+                currentAudio.pause();
+            }
+            
+            currentAudio = new Audio(audioUrl);
+            currentAudio.play();
+            
+            currentAudio.onended = () => {
+                currentAudio = null;
+            };
+        }
+
+        function fadeOutAudio(audio, duration = 1000, callback) {
+            if (!audio || audio.paused) {
+                if (callback) callback();
+                return;
+            }
+            const originalVolume = audio.volume;
+            const steps = 10;
+            const stepTime = duration / steps;
+            const volumeStep = originalVolume / steps;
+
+            const fadeInterval = setInterval(() => {
+                if (audio.volume > volumeStep) {
+                    audio.volume -= volumeStep;
+                } else {
+                    clearInterval(fadeInterval);
+                    audio.pause();
+                    audio.volume = originalVolume;
+                    if (callback) callback();
+                }
+            }, stepTime);
+        }
+
+        function fadeOutCurrentAudio(audio) {
+            const fadeAudio = setInterval(() => {
+                if (audio.volume > 0.1) {
+                    audio.volume -= 0.1;
+                } else {
+                    clearInterval(fadeAudio);
+                    audio.pause();
+                    audio.volume = 1.0;
+                }
+            }, 100);
+        }
+
+        function setPlaybackSpeed(speed) {
+            const audio = document.getElementById('question-audio');
+            
+            if (audioSpeed === speed) {
+                audioSpeed = 1.0;
+                audio.playbackRate = 1.0;
+                document.getElementById('speed-50').classList.remove('active');
+                document.getElementById('speed-75').classList.remove('active');
+            } else {
+                audioSpeed = speed;
+                audio.playbackRate = speed;
+                document.getElementById('speed-50').classList.toggle('active', speed === 0.5);
+                document.getElementById('speed-75').classList.toggle('active', speed === 0.75);
+            }
+            
+            closeOverflowPanel();
+        }
+
+        function toggleCaptions() {
+            captionsEnabled = !captionsEnabled;
+            const subtitles = document.getElementById('subtitles');
+            const captionsBtn = document.getElementById('captions-btn');
+            
+            if (captionsEnabled) {
+                subtitles.style.visibility = 'visible';
+                captionsBtn.classList.add('active');
+            } else {
+                subtitles.style.visibility = 'hidden';
+                captionsBtn.classList.remove('active');
+                document.getElementById('subtitle-korean').textContent = '';
+                document.getElementById('subtitle-chinese').textContent = '';
+            }
+            
+            closeOverflowPanel();
+        }
+
+        function closeOverflowPanel() {
+            document.getElementById('overflow-panel').classList.add('hidden');
+        }
+
+        function createDetailedResults() {
+            currentResultsPage = 1;
+            return generateResultsPageContent(1);
+        }
+
+        function generateResultsPageContent(page) {
+            const startIndex = (page - 1) * 2;
+            const endIndex = Math.min(startIndex + 2, questionsData.length);
+            
+            let html = '<div id="results-content-area">';
+            
+            html += '<div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-3">';
+            
+            for (let i = startIndex; i < endIndex; i++) {
+                const question = questionsData[i];
+                const answer = questionAnswers[i + 1];
+                const correctImage = question.images[question.correct];
+                
+                let status = '미응답 (Not Answered)';
+                let statusColor = 'text-gray-600';
+                
+                if (answer) {
+                    if (answer.correct) {
+                        status = '정답 (Correct)';
+                        statusColor = 'text-green-600';
+                    } else if (answer.timeout) {
+                        status = '시간 초과 (Time\'s Up)';
+                        statusColor = 'text-red-600';
+                    } else {
+                        status = '오답 (Wrong)';
+                        statusColor = 'text-red-600';
+                    }
+                }
+                
+                let bgColor = 'bg-gray-50'; 
+                if (answer) {
+                    if (answer.correct) {
+                        bgColor = 'bg-green-100'; 
+                    } else if (answer.timeout) {
+                        bgColor = 'bg-yellow-100'; 
+                    } else {
+                        bgColor = 'bg-red-100'; 
+                    }
+                }
+
+                html += `
+                    <div class="${bgColor} rounded-xl p-2 border-2 border-gray-200" style="background-color: ${bgColor === 'bg-green-100' ? 'rgba(34, 197, 94, 0.1)' : bgColor === 'bg-yellow-100' ? 'rgba(234, 179, 8, 0.1)' : bgColor === 'bg-red-100' ? 'rgba(239, 68, 68, 0.1)' : 'rgba(156, 163, 175, 0.1)'};">
+                        <div class="text-center mb-2">
+                            <h3 class="font-bold text-lg text-blue-800">
+                                Q${i + 1} <span class="${statusColor} font-semibold">${status}</span>
+                            </h3>
+                        </div>
+                        
+                        <div class="flex justify-center mb-2">
+                            <div class="relative flex-shrink-0 w-full max-w-xs lg:max-w-sm">
+                                <img src="${correctImage}" alt="Correct Answer" class="w-full h-auto object-contain max-h-80" 
+                                     oncontextmenu="return false;" ondragstart="return false;" 
+                                     style="pointer-events: none; user-select: none; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none;">
+                                <button onclick="toggleResultAudio(${i + 1})" 
+                                        class="absolute btn-primary btn-hover text-xs flex items-center justify-center overflow-hidden"
+                                        id="play-btn-${i + 1}" 
+                                        style="bottom: 8px; right: 8px; height: 36px; width: 75px; z-index: 10; border-radius: 8px; padding: 4px 8px;">
+                                    <div class="absolute inset-0 bg-blue-300 transition-all duration-100 ease-linear" 
+                                         id="progress-${i + 1}" style="width: 0%; z-index: 0;"></div>
+                                    <div class="relative z-10 flex items-center">
+                                        <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 24 24" id="speaker-result-${i + 1}" style="transform: scale(1.2);">
+                                            <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
+                                        </svg>
+                                        <span style="font-size: 0.9rem; font-weight: bold;">정답</span>
+                                    </div>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="text-sm bg-white p-2 rounded border">
+                            <div id="subtitle-content-${i + 1}" class="leading-relaxed text-center">
+                                <div class="text-gray-500">로딩 중...</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            html += '</div>';
+            
+            const totalPages = Math.ceil(questionsData.length / 2);
+            if (totalPages > 1) {
+                html += '<div class="text-center mb-1">';
+                html += '<div class="flex justify-center gap-1 flex-nowrap">';
+                
+                for (let p = 1; p <= totalPages; p++) {
+                    const startQ = (p - 1) * 2 + 1;
+                    const endQ = Math.min(p * 2, questionsData.length);
+                    const label = endQ === startQ ? `${startQ}` : `${startQ}/${endQ}`;
+                    const activeClass = p === page ? 'bg-blue-500 text-white' : 'bg-gray-300 text-gray-700';
+                    
+                    html += `<button onclick="showResultsPage(${p})" 
+                                    class="${activeClass} hover:bg-blue-600 hover:text-white px-3 py-2 rounded font-medium transition-all text-sm whitespace-nowrap" style="transform: scale(1.2);">
+                                ${label}
+                            </button>`;
+                }
+                
+                html += '</div>';
+                html += '</div>';
+            }
+            
+            html += '</div>';
+            
+            setTimeout(() => {
+                for (let i = startIndex; i < endIndex; i++) {
+                    loadSubtitleForQuestion(i + 1);
+                }
+            }, 100);
+            
+            return html;
+        }
+
+        function showResultsPage(page) {
+            stopAllResultAudios();
+            
+            currentResultsPage = page;
+            const newContent = generateResultsPageContent(page);
+            document.getElementById('results-content-area').outerHTML = newContent;
+        }
+
+        function loadSubtitleForQuestion(questionNum) {
+            const question = questionsData[questionNum - 1];
+            if (!question.vtt) return;
+            
+            fetch(question.vtt)
+                .then(response => response.text())
+                .then(vttText => {
+                    const cues = parseVTT(vttText);
+                    let subtitleHtml = '';
+                    
+                    const halfLength = Math.ceil(cues.length / 2);
+                    const firstHalfCues = cues.slice(0, halfLength);
+                    
+                    firstHalfCues.forEach(cue => {
+                        const lines = cue.text.split('\n');
+                        if (lines[0]) {
+                            subtitleHtml += `<div class="text-blue-600 font-bold">${lines[0]}</div>`;
+                        }
+                        if (lines[1]) {
+                            subtitleHtml += `<div class="text-gray-600 mb-2">${lines[1]}</div>`;
+                        }
+                    });
+                    
+                    const contentElement = document.getElementById(`subtitle-content-${questionNum}`);
+                    if (contentElement) {
+                        contentElement.innerHTML = subtitleHtml || '<div class="text-gray-500">자막 없음</div>';
+                    }
+                })
+                .catch(err => {
+                    const contentElement = document.getElementById(`subtitle-content-${questionNum}`);
+                    if (contentElement) {
+                        contentElement.innerHTML = '<div class="text-red-500">자막 로딩 실패</div>';
+                    }
+                    console.log('VTT loading failed:', err);
+                });
+        }
+
+        function toggleResultAudio(questionNum) {
+            const question = questionsData[questionNum - 1];
+            const playBtn = document.getElementById(`play-btn-${questionNum}`);
+            const progressBar = document.getElementById(`progress-${questionNum}`);
+            const speakerIcon = document.getElementById(`speaker-result-${questionNum}`);
+            
+            Object.keys(resultAudios).forEach(key => {
+                if (key != questionNum && resultAudios[key] && !resultAudios[key].paused) {
+                    resultAudios[key].pause();
+                    const otherBtn = document.getElementById(`play-btn-${key}`);
+                    const otherProgress = document.getElementById(`progress-${key}`);
+                    const otherSpeaker = document.getElementById(`speaker-result-${key}`);
+                    if (otherBtn) {
+                        otherBtn.querySelector('.relative.z-10').innerHTML = `
+                            <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 24 24" id="speaker-result-${key}" style="transform: scale(1.2);">
+                                <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
+                            </svg>
+                            <span style="font-size: 0.9rem; font-weight: bold;">정답</span>
+                        `;
+                    }
+                    if (otherProgress) {
+                        otherProgress.style.width = '0%';
+                    }
+                    if (resultAudios[key] && resultAudios[key].waveInterval) {
+                        clearInterval(resultAudios[key].waveInterval);
+                        resultAudios[key].waveInterval = null;
+                    }
+                }
+            });
+            
+            if (resultAudios[questionNum] && !resultAudios[questionNum].paused) {
+                resultAudios[questionNum].pause();
+                if (resultAudios[questionNum].waveInterval) {
+                    clearInterval(resultAudios[questionNum].waveInterval);
+                    resultAudios[questionNum].waveInterval = null;
+                }
+                speakerIcon.innerHTML = `<path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>`;
+                speakerIcon.style.color = '';
+            } else {
+                if (!resultAudios[questionNum]) {
+                    resultAudios[questionNum] = new Audio(question.audio);
+                    
+                    resultAudios[questionNum].addEventListener('timeupdate', () => {
+                        if (resultAudios[questionNum].duration) {
+                            const progress = (resultAudios[questionNum].currentTime / resultAudios[questionNum].duration) * 100;
+                            if (progressBar) {
+                                progressBar.style.width = progress + '%';
+                            }
+                        }
+                    });
+                    
+                    resultAudios[questionNum].onended = () => {
+                        if (resultAudios[questionNum].waveInterval) {
+                            clearInterval(resultAudios[questionNum].waveInterval);
+                            resultAudios[questionNum].waveInterval = null;
+                        }
+                        const endSpeaker = document.getElementById(`speaker-result-${questionNum}`);
+                        if (endSpeaker) {
+                            endSpeaker.innerHTML = `<path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>`;
+                            endSpeaker.style.color = '';
+                            endSpeaker.style.transform = 'scale(1.2)';
+                        }
+                        if (progressBar) {
+                            progressBar.style.width = '0%';
+                        }
+                    };
+                }
+                
+                speakerIcon.style.color = '#22c55e'; 
+                const noWavePath = `<path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/>`;
+                const oneWavePath = `<path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>`;
+                const twoWavePath = `<path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77zM19 12c0-2.76-1.46-5.18-3.64-6.53v1.8c1.47 1.07 2.64 2.89 2.64 4.73 0 1.84-1.17 3.66-2.64 4.73v1.8C17.54 17.18 19 14.76 19 12z"/>`;
+                
+                const wavePaths = [noWavePath, oneWavePath, twoWavePath];
+                let currentWaveIndex = 0;
+                
+                resultAudios[questionNum].waveInterval = setInterval(() => {
+                    if (speakerIcon) {
+                        speakerIcon.innerHTML = wavePaths[currentWaveIndex];
+                        currentWaveIndex = (currentWaveIndex + 1) % 3;
+                    }
+                }, 200);
+                
+                resultAudios[questionNum].play();
+            }
+        }
+
+        function stopAllResultAudios() {
+            Object.values(resultAudios).forEach(audio => {
+                if (audio && !audio.paused) {
+                    audio.pause();
+                }
+                if (audio && audio.waveInterval) {
+                    clearInterval(audio.waveInterval);
+                    audio.waveInterval = null;
+                }
+            });
+            
+            Object.keys(resultAudios).forEach(key => {
+                const btn = document.getElementById(`play-btn-${key}`);
+                const progress = document.getElementById(`progress-${key}`);
+                const speaker = document.getElementById(`speaker-result-${key}`);
+                if (btn) {
+                    const contentDiv = btn.querySelector('.relative.z-10');
+                    if (contentDiv) {
+                        contentDiv.innerHTML = `
+                            <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 24 24" id="speaker-result-${key}" style="transform: scale(1.2);">
+                                <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
+                            </svg>
+                            <span style="font-size: 0.9rem; font-weight: bold;">정답</span>
+                        `;
+                    }
+                }
+                if (progress) {
+                    progress.style.width = '0%';
+                }
+                if (speaker) {
+                    speaker.style.color = '';
+                }
+            });
+        }
+
+        function createConfetti() {
+            const colors = ['#f39c12', '#e74c3c', '#9b59b6', '#3498db', '#2ecc71'];
+            
+            // 數量從 350 暴增至 1500，製造真正的密集感
+            const particleCount = 1500; 
+            
+            // 設定產生區間為 16000 毫秒 (16秒)
+            // 這樣可以確保在第 14 秒音樂結束時，彩帶雨仍然很強烈
+            // 加上 3 秒落下動畫，總視覺時間約 19 秒
+            const duration = 16000; 
+
+            for (let i = 0; i < particleCount; i++) {
+                // 隨機延遲
+                const delay = Math.random() * duration;
+
+                setTimeout(() => {
+                    const confetti = document.createElement('div');
+                    confetti.className = 'confetti';
+                    
+                    // 隨機位置
+                    confetti.style.left = Math.random() * 100 + 'vw';
+                    // 隨機顏色
+                    confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                    
+                    // 隨機微調寬度，讓畫面看起來更自然不生硬 (選用)
+                    confetti.style.width = (Math.random() * 5 + 8) + 'px';
+                    confetti.style.height = (Math.random() * 5 + 8) + 'px';
+                    
+                    document.body.appendChild(confetti);
+                    
+                    // 配合 CSS 動畫時間 (3秒)，3秒後移除
+                    setTimeout(() => {
+                        confetti.remove();
+                    }, 3000);
+                }, delay);
+            }
+        }
+
+        document.getElementById('overflow-btn').addEventListener('click', () => {
+            const panel = document.getElementById('overflow-panel');
+            panel.classList.toggle('hidden');
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            showPage('page1');
+            
+            const mask = document.getElementById('intro-mask');
+            const okBtn = document.getElementById('intro-ok-btn');
+            const introAudio = document.getElementById('intro-audio');
+
+            setTimeout(() => {
+                mask.classList.remove('opacity-0');
+            }, 100);
+
+            okBtn.addEventListener('click', () => {
+                if (introAudio) {
+                    introAudio.volume = 0.5;
+                    introAudio.play().catch(e => console.log("Audio play failed:", e));
+                }
+
+                mask.classList.add('opacity-0');
+
+                setTimeout(() => {
+                    mask.classList.add('hidden');
+                }, 500);
+
+                idleTimer = setTimeout(() => {
+                    const idleHint = document.getElementById('idle-hint');
+                    idleHint.classList.remove('hidden');
+                    idleHint.classList.add('fade-in');
+                }, 15000);
+            });
+        });
+    </script>
+</body>
+</html>
