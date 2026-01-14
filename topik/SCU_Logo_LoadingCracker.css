@@ -1,0 +1,178 @@
+body, html {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background-color: transparent; 
+    font-family: 'Noto Sans TC', sans-serif;
+}
+
+/* === Loading 介面樣式 === */
+#loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    transition: opacity 2s ease-out;
+}
+
+.black-mask {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: black;
+    opacity: 0.9; 
+    z-index: -1;
+}
+
+.animation-scale-wrapper {
+    width: 300px;
+    height: 300px;
+    transform: scale(2.5);
+    transform-origin: top center;
+    margin-top: 30px; 
+    margin-bottom: 460px; 
+    position: relative;
+    border-radius: 50%;
+    -webkit-mask-image: -webkit-radial-gradient(white, black);
+    mask-image: radial-gradient(white, black);
+    transition: transform 0.3s ease, margin 0.3s ease;
+}
+
+@media (max-width: 768px) {
+    .animation-scale-wrapper {
+        transform: scale(1.35);
+        margin-top: 100px; 
+        margin-bottom: 150px; 
+    }
+}
+
+dotlottie-player {
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+#layer-bg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    opacity: 0.3;
+    filter: grayscale(100%);
+    z-index: 1;
+}
+
+.water-tank {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 0%;
+    z-index: 2;
+    overflow: hidden;
+    --sine-wave: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 60' preserveAspectRatio='none'%3E%3Cpath d='M 0 35 Q 25 10 50 35 T 100 35 V 100 H 0 Z' fill='black'/%3E%3C/svg%3E");
+    -webkit-mask-image: var(--sine-wave), linear-gradient(black, black);
+    mask-image: var(--sine-wave), linear-gradient(black, black);
+    -webkit-mask-size: 300px 96px, 100% 100%;
+    mask-size: 300px 96px, 100% 100%;
+    -webkit-mask-position: 0 0, 0 95px;
+    mask-position: 0 0, 0 95px;
+    -webkit-mask-repeat: repeat-x, no-repeat;
+    mask-repeat: repeat-x, no-repeat;
+    animation: wave-loop 1s linear infinite;
+}
+
+#layer-fg {
+    position: absolute;
+    bottom: 0; 
+    left: 0;
+    width: 300px;
+    height: 300px; 
+}
+
+@keyframes wave-loop {
+    0% { -webkit-mask-position-x: 0px, 0px; }
+    100% { -webkit-mask-position-x: -300px, 0px; }
+}
+
+.text-container {
+    flex-grow: 1;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start; 
+    align-items: center;
+    z-index: 10;
+    gap: 10px; 
+    padding: 0 20px;
+    box-sizing: border-box;
+}
+
+:root {
+    --base-font-size: clamp(18px, 5vw, 42px);
+}
+
+.aesthetic-text {
+    color: #000000;
+    font-weight: 900;
+    letter-spacing: 2px;
+    -webkit-text-stroke: 1.5px #ffffff;
+    paint-order: stroke fill;
+    text-shadow: 
+        0 0 15px rgba(255, 255, 255, 0.9),
+        0 0 30px rgba(0, 229, 255, 0.6),
+        0 0 60px rgba(0, 229, 255, 0.4);
+}
+
+.status-line {
+    display: flex;
+    justify-content: center;
+    align-items: flex-end; 
+    width: 100%;
+    min-height: calc(var(--base-font-size) * 2);
+    margin: 0; 
+    font-size: var(--base-font-size);
+    white-space: nowrap; 
+}
+
+.percent-line {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start; 
+    width: 100%;
+    height: auto; 
+    margin: 0;    
+    font-size: var(--base-font-size);
+    white-space: nowrap;
+}
+
+.zh-big {
+    font-size: 150%; 
+    line-height: 1; 
+    margin: 0 8px;
+    position: relative;
+    bottom: -2px; 
+}
+
+.en-text {
+    line-height: 1;
+}
+
+/* === 拉炮粒子樣式 (Canva 相容版) === */
+.confetti-particle {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    pointer-events: none; /* 讓點擊穿透 */
+    will-change: transform, opacity;
+    z-index: 99999; /* 確保在最上層 */
+}
