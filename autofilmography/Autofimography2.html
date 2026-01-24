@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="author" content="CodeHim & Kiyoshi">
+    <title>Kiyoshi's Autofilmography</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    
+    <script src="Autofimography_PlayList.js"></script>
+
+    <style>
+      /* --- 全局設定 --- */
+      body, html {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+        background: #000;
+        font-family: arial, sans-serif;
+        overflow: hidden;
+      }
+
+      /* 主容器 */
+      #mainWrap {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        height: 100%;
+        background: #000;
+        position: relative;
+      }
+
+      /* (A) 影片顯示區 */
+      #vContainer {
+        flex-grow: 1; 
+        width: 100%;
+        position: relative;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background: #000;
+        overflow: hidden;
+        min-height: 0;
+      }
+
+      #vVid {
+        width: 100%;
+        height: 100%;
+        object-fit: contain; 
+      }
+
+      /* 字幕樣式統一：強制行高與字型，解決英日文高度不一問題 */
+      video::cue {
+        background: rgba(0, 0, 0, 0.6);
+        color: #fff;
+        font-size: 1.1em;
+        line-height: 1.5;
+        font-family: "Microsoft JhengHei", "Meiryo", Arial, sans-serif;
+      }
+
+      /* (B) 控制列 */
+      #vControls {
+        display: flex;
+        align-items: center;
+        padding: 8px 10px;
+        background: #222;
+        color: #fff;
+        flex-shrink: 0;
+        border-top: 1px solid #333;
+        border-bottom: 1px solid #333;
+        position: relative;
+        z-index: 20;
+      }
+
+      /* 按鈕樣式 */
+      .ctrl-btn {
+        background: 0;
+        border: 0;
+        cursor: pointer;
+        padding: 5px;
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 30px;
+        transition: color 0.1s;
+      }
+      .ctrl-btn:hover { color: #fea; }
+      .ctrl-btn:disabled { color: #555; cursor: default; }
+      .ctrl-btn.active { color: #fea; text-shadow: 0 0 5px #fea; }
+      .material-icons { font-size: 26px; }
+
+      /* 時間顯示 */
+      #vCron {
+        font-size: 13px;
+        color: #cbcbcb;
+        margin: 0 5px;
+        white-space: nowrap;
+        min-width: 65px;
+        text-align: center;
+        font-variant-numeric: tabular-nums;
+      }
+
+      /* (C) 進度條 */
+      #seek-wrap {
+        flex-grow: 10;
+        position: relative;
+        height: 30px;
+        margin: 0 10px;
+        display: flex;
+        align-items: center;
+        cursor: pointer;
+        min-width: 50px;
+      }
+      .bar-base { position: absolute; left: 0; height: 4px; border-radius: 5px; width: 100%; pointer-events: none; }
+      #vSeekBg { background: #626262; z-index: 1; }
+      #vBuffer { background: #999; width: 0%; z-index: 2; transition: width 0.2s linear; }
+      #vSeek {
+        position: absolute; left: 0; width: 100%; height: 100%; margin: 0; z-index: 3;
+        -webkit-appearance: none; background: transparent; cursor: pointer;
+      }
+      #vSeek::-webkit-slider-thumb {
+        -webkit-appearance: none; height: 14px; width: 14px; border-radius: 50%;
+        background: #3b99fc; border: 2px solid #fff; box-shadow: 0 0 2px rgba(0,0,0,0.5);
+      }
+      #vSeek::-moz-range-thumb {
+        height: 14px; width: 14px; border-radius: 50%; background: #3b99fc; border: none;
+      }
+
+      /* (D) 垂直音量控制區 */
+      #vol-container {
+        position: relative;
+        margin-left: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      #vol-slider-wrap {
+        display: none;
+        position: absolute;
+        bottom: 40px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 32px;
+        height: 110px;
+        background: rgba(30, 30, 30, 0.95);
+        border-radius: 20px;
+        border: 1px solid #555;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+        z-index: 100;
+        justify-content: center;
+        align-items: center;
+        padding: 10px 0;
+      }
+      #vol-slider-wrap.show { display: flex; }
+      #vVolume {
+        -webkit-appearance: none; width: 100px; height: 6px; background: transparent;
+        transform: rotate(-90deg); cursor: pointer;
+      }
+      #vVolume::-webkit-slider-runnable-track { background: #626262; height: 4px; border-radius: 2px; }
+      #vVolume::-moz-range-track { background: #626262; height: 4px; border-radius: 2px; }
+      #vVolume::-webkit-slider-thumb {
+        -webkit-appearance: none; height: 14px; width: 14px; background: #fff;
+        border-radius: 50%; margin-top: -5px; box-shadow: 0 1px 3px rgba(0,0,0,0.5);
+      }
+
+      /* (E) 播放清單 */
+      #vList {
+        background: #1a1a1a;
+        overflow-y: auto;
+        padding: 0;
+        border-top: 1px solid #333;
+        flex-shrink: 0;
+      }
+      .vRow {
+        padding: 10px 15px; 
+        border-bottom: 1px solid #2a2a2a;
+        background: #222;
+        color: #bbb;
+        cursor: pointer;
+        font-size: 14px;
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        line-height: 1.5;
+        transition: background 0.2s;
+      }
+      .vRow:hover { background: #333; color: #fff; }
+      .vRow.now {
+        background: #303030;
+        color: #fea;
+        border-left: 5px solid #fea;
+        padding-left: 10px;
+        font-weight: bold;
+      }
+
+      /* === 響應式佈局 === */
+      @media (min-width: 768px) {
+        #vList {
+            height: auto;
+            max-height: 135px;
+            width: 100%;
+        }
+      }
+
+      @media (max-width: 767px) {
+        #vContainer {
+            /* 修正手機版顯示問題：加入 flex-shrink: 0 防止被壓縮 */
+            flex-grow: 0;
+            flex-shrink: 0; 
+            width: 100%;
+            aspect-ratio: 16/9;
+        }
+        #vList {
+            flex-grow: 1;
+            max-height: none;
+        }
+
+        #vControls { padding: 5px 2px; justify-content: space-between; }
+        .ctrl-btn { min-width: 26px; padding: 5px 0px; }
+        .material-icons { font-size: 24px; }
+        #vCron { font-size: 11px; margin: 0 2px; min-width: auto; }
+        #seek-wrap { margin: 0 5px; }
+        #vTime { display: none; }
+        #vNow::after { content: ""; }
+        #vol-container { margin: 0; }
+      }
+
+      #mainWrap:fullscreen { background: #000; }
+      #mainWrap:fullscreen #vContainer { height: 100%; width: 100%; }
+      #mainWrap:fullscreen #vList { display: none; }
+      #mainWrap:fullscreen #vControls { position: absolute; bottom: 0; width: 100%; background: rgba(0,0,0,0.7); }
+    </style>
+
+    <script>
+    window.addEventListener("DOMContentLoaded", () => {
+      if (typeof playlist === 'undefined') {
+        alert("找不到 playlist 變數");
+        return;
+      }
+
+      const mainWrap = document.getElementById("mainWrap"),
+            video = document.getElementById("vVid"),
+            vPlay = document.getElementById("vPlay"),
+            vPlayIco = document.getElementById("vPlayIco"),
+            vPrev = document.getElementById("vPrev"),
+            vNext = document.getElementById("vNext"),
+            vNow = document.getElementById("vNow"),
+            vTime = document.getElementById("vTime"),
+            vSeek = document.getElementById("vSeek"),
+            vBuffer = document.getElementById("vBuffer"),
+            vVolume = document.getElementById("vVolume"),
+            vVolIco = document.getElementById("vVolIco"),
+            vVolContainer = document.getElementById("vol-container"),
+            vVolSliderWrap = document.getElementById("vol-slider-wrap"),
+            vList = document.getElementById("vList"),
+            vFull = document.getElementById("vFull"),
+            vFullIco = document.getElementById("vFullIco"),
+            vCC = document.getElementById("vCC");
+
+      // 建立清單
+      for (let i in playlist) {
+        let row = document.createElement("div");
+        row.className = "vRow";
+        row.innerHTML = playlist[i]["name"];
+        row.addEventListener("click", () => vidPlay(parseInt(i))); 
+        playlist[i]["row"] = row;
+        vList.appendChild(row);
+      }
+
+      var vidNow = 0, vidStart = true;
+      var currentTrackUrl = null;
+
+      // 核心修正函式：切換影片
+      const vidPlay = (idx, nostart) => {
+        // 1. 強制移除舊的 Track 元素 (關鍵修正：避免瀏覽器快取舊字幕)
+        const oldTrack = document.getElementById("vTrack");
+        if (oldTrack) {
+            oldTrack.remove();
+        }
+
+        // 釋放記憶體
+        if (currentTrackUrl) {
+            URL.revokeObjectURL(currentTrackUrl);
+            currentTrackUrl = null;
+        }
+        
+        // 2. 載入影片
+        vidNow = idx;
+        vidStart = nostart ? false : true;
+        video.src = encodeURI(playlist[idx]["src"]);
+        
+        // 重置按鈕
+        vCC.disabled = true;
+        vCC.classList.remove("active");
+
+        // 3. 判斷並建立新的 Track
+        let newTrackUrl = null;
+        let hasSubtitle = false;
+
+        if (playlist[idx]["cc_text"]) {
+            const blob = new Blob([playlist[idx]["cc_text"]], { type: 'text/vtt' });
+            newTrackUrl = URL.createObjectURL(blob);
+            currentTrackUrl = newTrackUrl;
+            hasSubtitle = true;
+        } else if (playlist[idx]["cc"]) {
+            newTrackUrl = playlist[idx]["cc"];
+            hasSubtitle = true;
+        }
+
+        // 如果有字幕，動態建立 <track> 並掛載
+        if (hasSubtitle) {
+            const track = document.createElement("track");
+            track.id = "vTrack";
+            track.kind = "subtitles";
+            track.label = "Chinese";
+            track.srclang = "zh";
+            track.src = newTrackUrl;
+            track.default = true;
+            
+            video.appendChild(track);
+            
+            // 強制開啟字幕
+            track.track.mode = "showing";
+            vCC.disabled = false;
+            vCC.classList.add("active");
+        }
+
+        // 滾動清單
+        for (let i in playlist) {
+          if (i == idx) { 
+            playlist[i]["row"].classList.add("now");
+            playlist[i]["row"].scrollIntoView({ behavior: "smooth", block: "start" });
+          }
+          else { playlist[i]["row"].classList.remove("now"); }
+        }
+        
+        vSeek.value = 0;
+        vBuffer.style.width = "0%";
+      };
+
+      video.addEventListener("canplay", () => { 
+        if (vidStart) {
+          video.play().catch(e => console.log("Auto-play prevented", e));
+          vidStart = true;
+        }
+        vPlay.disabled = false;
+        vVolume.disabled = false;
+        vSeek.disabled = false;
+        vPrev.disabled = false;
+        vNext.disabled = false;
+        vFull.disabled = false;
+      });
+
+      video.addEventListener("error", (e) => { console.error("Video Error:", video.error); });
+
+      video.addEventListener("ended", () => {
+        let nextIdx = vidNow + 1;
+        if (nextIdx >= playlist.length) { nextIdx = 0; }
+        vidPlay(nextIdx);
+      });
+
+      vidPlay(0, true);
+
+      // UI Controls
+      video.addEventListener("play", () => vPlayIco.innerHTML = "pause");
+      video.addEventListener("pause", () => vPlayIco.innerHTML = "play_arrow");
+      vPlay.addEventListener("click", () => {
+        if (video.paused) { video.play(); } else { video.pause(); }
+      });
+
+      vPrev.addEventListener("click", () => {
+        let prevIdx = vidNow - 1;
+        if (prevIdx < 0) prevIdx = playlist.length - 1;
+        vidPlay(prevIdx);
+      });
+      vNext.addEventListener("click", () => {
+        let nextIdx = vidNow + 1;
+        if (nextIdx >= playlist.length) nextIdx = 0;
+        vidPlay(nextIdx);
+      });
+
+      // 字幕按鈕切換
+      vCC.addEventListener("click", () => {
+        // 重新抓取當前的 track 元素 (因為它是動態生成的)
+        const currentTrack = document.getElementById("vTrack");
+        if (!currentTrack) return;
+
+        if (currentTrack.track.mode === "showing") {
+          currentTrack.track.mode = "hidden";
+          vCC.classList.remove("active");
+        } else {
+          currentTrack.track.mode = "showing";
+          vCC.classList.add("active");
+        }
+      });
+
+      vFull.addEventListener("click", () => {
+        if (!document.fullscreenElement) {
+          mainWrap.requestFullscreen().catch(err => { alert(err.message); });
+        } else {
+          document.exitFullscreen();
+        }
+      });
+      document.addEventListener("fullscreenchange", () => {
+        if (document.fullscreenElement) {
+          vFullIco.innerHTML = "fullscreen_exit";
+        } else {
+          vFullIco.innerHTML = "fullscreen";
+          playlist[vidNow]["row"].scrollIntoView({ behavior: "auto", block: "start" });
+        }
+      });
+
+      const timeString = secs => {
+        let ss = Math.floor(secs), hh = Math.floor(ss / 3600), mm = Math.floor((ss - (hh * 3600)) / 60);
+        ss = ss - (hh * 3600) - (mm * 60);
+        if (hh > 0) { mm = mm < 10 ? "0" + mm : mm; }
+        ss = ss < 10 ? "0" + ss : ss;
+        return hh > 0 ? `${hh}:${mm}:${ss}` : `${mm}:${ss}`;
+      };
+
+      video.addEventListener("loadedmetadata", () => {
+        vNow.innerHTML = timeString(0);
+        vTime.innerHTML = timeString(video.duration);
+        vSeek.max = Math.floor(video.duration);
+      });
+
+      // 進度條事件
+      var vSeeking = false;
+      vSeek.addEventListener("input", () => vSeeking = true);
+      vSeek.addEventListener("mousedown", () => vSeeking = true);
+      vSeek.addEventListener("touchstart", () => vSeeking = true);
+
+      vSeek.addEventListener("change", () => {
+        video.currentTime = vSeek.value;
+        if (!video.paused) video.play();
+        vSeeking = false;
+      });
+      
+      vSeek.addEventListener("mouseup", () => vSeeking = false);
+      vSeek.addEventListener("touchend", () => vSeeking = false);
+
+      const updateBuffer = () => {
+        if (video.duration > 0) {
+          let currentPct = (video.currentTime / video.duration) * 100;
+          let bufferPct = 0;
+          for (let i = 0; i < video.buffered.length; i++) {
+            if (video.buffered.start(i) <= video.currentTime && video.buffered.end(i) >= video.currentTime) {
+              bufferPct = (video.buffered.end(i) / video.duration) * 100;
+              break;
+            }
+          }
+          if (bufferPct < currentPct) bufferPct = currentPct;
+          vBuffer.style.width = bufferPct + "%";
+        }
+      };
+      
+      video.addEventListener("timeupdate", () => {
+        vNow.innerHTML = timeString(video.currentTime);
+        if (!vSeeking && !video.seeking) { 
+            vSeek.value = Math.floor(video.currentTime); 
+        }
+        updateBuffer();
+      });
+      video.addEventListener("progress", updateBuffer);
+
+      // 音量控制
+      const updateVolIcon = () => {
+        if (video.volume == 0) vVolIco.innerHTML = "volume_off";
+        else if (video.volume < 0.5) vVolIco.innerHTML = "volume_down";
+        else vVolIco.innerHTML = "volume_up";
+      };
+
+      vVolIco.addEventListener("click", (e) => {
+        e.stopPropagation(); 
+        if (vVolSliderWrap.classList.contains('show')) {
+            vVolSliderWrap.classList.remove('show');
+        } else {
+            vVolSliderWrap.classList.add('show');
+        }
+      });
+
+      vVolume.addEventListener("input", () => {
+        video.volume = vVolume.value;
+        updateVolIcon();
+      });
+
+      document.addEventListener("click", (e) => {
+        if (!vVolContainer.contains(e.target)) {
+            vVolSliderWrap.classList.remove('show');
+        }
+      });
+    });
+    </script>
+  </head>
+  <body>
+    <div id="mainWrap">
+      
+      <div id="vContainer">
+        <video id="vVid" preload="auto" playsinline>
+        </video>
+      </div>
+
+      <div id="vControls">
+        <button id="vPrev" class="ctrl-btn" disabled><span class="material-icons">skip_previous</span></button>
+        <button id="vPlay" class="ctrl-btn" disabled><span id="vPlayIco" class="material-icons">play_arrow</span></button>
+        <button id="vNext" class="ctrl-btn" disabled><span class="material-icons">skip_next</span></button>
+
+        <div id="vCron">
+            <span id="vNow">0:00</span> <span id="vTime">/ 0:00</span>
+        </div>
+
+        <div id="seek-wrap">
+            <div id="vSeekBg" class="bar-base"></div>
+            <div id="vBuffer" class="bar-base"></div>
+            <input id="vSeek" type="range" min="0" value="0" step="1" disabled>
+        </div>
+
+        <button id="vCC" class="ctrl-btn" disabled title="Toggle Subtitles">
+            <span class="material-icons">closed_caption</span>
+        </button>
+
+        <div id="vol-container">
+            <span id="vVolIco" class="material-icons ctrl-btn" style="cursor: pointer;">volume_up</span>
+            <div id="vol-slider-wrap">
+                <input id="vVolume" type="range" min="0" max="1" value="1" step="0.05" disabled>
+            </div>
+        </div>
+
+        <button id="vFull" class="ctrl-btn" disabled>
+          <span id="vFullIco" class="material-icons">fullscreen</span>
+        </button>
+      </div>
+
+      <div id="vList"></div>
+
+    </div>
+  </body>
+</html>

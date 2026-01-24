@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="author" content="CodeHim">
+    <title>Kiyoshi's Autofilmography</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <script src="Autofimography_PlayList.js"></script>
+
+    <style>
+      #vList {
+        max-height: 360px;
+        overflow-y: auto;
+      }
+
+      #vWrap {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      #vSeek {
+        flex-grow: 1;
+        margin: 0 10px;
+      }
+
+      #vVolIco {
+        cursor: pointer;
+        margin-left: 10px;
+      }
+
+      #vVolume {
+        display: none;
+      }
+
+      #vCron {
+        margin-left: 10px;
+        margin-right: 10px;
+      }
+
+
+
+
+/* Video.css */
+
+
+
+
+/* (A) MATERIAL ICONS */
+.material-icons {
+  font-size: 28px;
+  color: #fff;
+}
+
+/* (B) WRAPPER */
+#vWrap {
+  font-family: arial, sans-serif;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  /*max-width: 1000px;*/
+  background: #484848;
+}
+
+/* (C) VIDEO */
+#vVid {
+  width: 100%;
+}
+
+/* (D) PLAY/PAUSE BUTTON */
+#vPlay {
+  padding: 10px;
+  margin: 0;
+  background: 0;
+  border: 0;
+  cursor: pointer;
+}
+
+/* (E) TIME */
+#vCron {
+  font-size: 14px;
+  color: #cbcbcb;
+  margin: 0 10px;
+}
+
+/* (F1) RANGE SLIDERS */
+/* (F1) HIDE DEFAULT */
+#vWrap input[type="range"] {
+  box-sizing: border-box;
+  appearance: none;
+  border: none;
+  outline: none;
+  box-shadow: none;
+  padding: 0;
+  margin: 0;
+  background: 0;
+}
+#vWrap input[type="range"]::-webkit-slider-thumb {
+  appearance: none;
+}
+
+/* (F2) CUSTOM SLIDER TRACK */
+#vWrap input[type=range]::-webkit-slider-runnable-track {
+  background: #626262;
+  border-radius: 10px;
+}
+#vWrap input[type=range]::-moz-range-track {
+  background: #626262;
+  border-radius: 10px;
+}
+
+/* (F3) CUSTOM SLIDER BUTTON */
+#vWrap input[type=range]::-webkit-slider-thumb {
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  border: 0;
+  background: #fff;
+}
+#vWrap input[type=range]::-moz-range-thumb {
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  border: 0;
+  background: #fff;
+}
+
+/* (G) SEEK BAR */
+#vSeek {
+  width: 180px;
+}
+
+/* (H) VOLUME */
+#vVolume {
+  width: 100px;
+}
+#vVolIco {
+  margin: 0 10px;
+  cursor: pointer;
+}
+
+/* (I) PLAYLIST */
+#vList {
+  width: 100%;
+  border-radius: 5px;
+  padding: 10px;
+  margin: 10px;
+  color: #7e7e7e;
+  background: #323232;
+}
+.vRow {
+  cursor: pointer;
+  padding: 10px 0;
+}
+.vRow.now {
+  color: #fea;
+}
+
+
+    </style>
+
+    <script>
+    window.addEventListener("DOMContentLoaded", () => {
+
+
+      const video = document.getElementById("vVid"),
+            vPlay = document.getElementById("vPlay"),
+            vPlayIco = document.getElementById("vPlayIco"),
+            vNow = document.getElementById("vNow"),
+            vTime = document.getElementById("vTime"),
+            vSeek = document.getElementById("vSeek"),
+            vVolume = document.getElementById("vVolume"),
+            vVolIco = document.getElementById("vVolIco"),
+            vList = document.getElementById("vList");
+
+      // Build playlist
+      for (let i in playlist) {
+        let row = document.createElement("div");
+        row.className = "vRow";
+        row.innerHTML = playlist[i]["name"];
+        row.addEventListener("click", () => vidPlay(i));
+        playlist[i]["row"] = row;
+        vList.appendChild(row);
+      }
+
+      var vidNow = 0, vidStart = true;
+
+      // Play selected video
+      vidPlay = (idx, nostart) => {
+        vidNow = idx;
+        vidStart = nostart ? false : true;
+        video.src = encodeURI(playlist[idx]["src"]);
+        for (let i in playlist) {
+          if (i == idx) { 
+            playlist[i]["row"].classList.add("now");
+            // Scroll the current row to the top of the playlist view
+            playlist[i]["row"].scrollIntoView({ behavior: "smooth", block: "start" });
+          }
+          else { playlist[i]["row"].classList.remove("now"); }
+        }
+      };
+
+      video.addEventListener("canplay", () => { 
+        if (vidStart) {
+          video.play();
+          vidStart = true;
+        }
+      });
+
+      video.addEventListener("ended", () => {
+        vidNow++;
+        if (vidNow >= playlist.length) { vidNow = 0; }
+        vidPlay(vidNow);
+      });
+
+      vidPlay(0, true); // Start with the first video
+
+      // Play/Pause button toggle
+      video.addEventListener("play", () => vPlayIco.innerHTML = "pause");
+      video.addEventListener("pause", () => vPlayIco.innerHTML = "play_arrow");
+
+      vPlay.addEventListener("click", () => {
+        if (video.paused) { video.play(); }
+        else { video.pause(); }
+      });
+
+      var timeString = secs => {
+        let ss = Math.floor(secs),
+            hh = Math.floor(ss / 3600),
+            mm = Math.floor((ss - (hh * 3600)) / 60);
+        ss = ss - (hh * 3600) - (mm * 60);
+        if (hh>0) { mm = mm<10 ? "0"+mm : mm; }
+        ss = ss<10 ? "0"+ss : ss;
+        return hh>0 ? `${hh}:${mm}:${ss}` : `${mm}:${ss}` ;
+      };
+
+      video.addEventListener("loadedmetadata", () => {
+        vNow.innerHTML = timeString(0);
+        vTime.innerHTML = timeString(video.duration);
+      });
+
+      video.addEventListener("timeupdate", () => vNow.innerHTML = timeString(video.currentTime));
+
+      video.addEventListener("loadedmetadata", () => {
+        vSeek.max = Math.floor(video.duration);
+        var vSeeking = false;
+        vSeek.addEventListener("input", () => vSeeking = true);
+        vSeek.addEventListener("change", () => {
+          video.currentTime = vSeek.value;
+          if (!video.paused) { video.play(); }
+          vSeeking = false;
+        });
+
+        video.addEventListener("timeupdate", () => {
+          if (!vSeeking) { vSeek.value = Math.floor(video.currentTime); }
+        });
+      });
+
+      vVolIco.addEventListener("click", () => {
+        video.volume = video.volume==0 ? 1 : 0 ;
+        vVolume.value = video.volume;
+        vVolIco.innerHTML = (vVolume.value==0 ? "volume_mute" : "volume_up");
+      });
+
+      vVolume.addEventListener("change", () => {
+        video.volume = vVolume.value;
+        vVolIco.innerHTML = (vVolume.value==0 ? "volume_mute" : "volume_up");
+      });
+
+      video.addEventListener("canplay", () => {
+        vPlay.disabled = false;
+        vVolume.disabled = false;
+        vSeek.disabled = false;
+      });
+
+      video.addEventListener("waiting", () => {
+        vPlay.disabled = true;
+        vVolume.disabled = true;
+        vSeek.disabled = true;
+      });
+    });
+    </script>
+  </head>
+  <body>
+    <div id="vWrap">
+      <video id="vVid"></video>
+      <button id="vPlay" disabled><span id="vPlayIco" class="material-icons">play_arrow</span></button>
+      <div id="vCron">
+        <span id="vNow"></span> / <span id="vTime"></span>
+      </div>
+      <input id="vSeek" type="range" min="0" value="0" step="1" disabled>
+      <span id="vVolIco" class="material-icons">volume_up</span>
+      <input id="vVolume" type="range" min="0" max="1" value="1" step="0.1" disabled>
+      <div id="vList"></div>
+    </div>
+  </body>
+</html>
