@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TOPIK I-듣기 기출문제</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/@dotlottie/player-component@2.7.12/dist/dotlottie-player.mjs" type="module"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+    <link rel="stylesheet" href="https://kiyoshichang.github.io/code/topik/quiz_data03_style.css">
+</head>
+<body oncontextmenu="return false;">
+    <div id="page1" class="page active">
+        <audio id="intro-audio" preload="auto">
+            <source src="https://mon-ami.up.seesaa.net/topik/SE_Arirang.mp3" type="audio/mpeg">
+        </audio>
+        
+        <div id="intro-mask" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm transition-opacity duration-500 opacity-0 pointer-events-auto">
+            <div class="bg-white/90 border-2 border-blue-200 rounded-2xl p-8 text-center shadow-[0_0_40px_rgba(37,99,235,0.6)] transform scale-105">
+                 <h2 class="text-3xl md:text-4xl font-black text-blue-800 mb-8 drop-shadow-sm">Are you ready?</h2>
+                 <button id="intro-ok-btn" class="btn-primary px-10 py-3 text-xl shadow-lg hover:scale-105 transition-transform">GO!!</button>
+            </div>
+        </div>
+
+        <div class="absolute inset-0 grid grid-rows-12 grid-cols-12 gap-0">
+            <div class="row-start-1 row-span-1 col-span-12 flex items-end justify-center" style="padding-bottom: 0vh;">
+                <h1 class="text-4xl md:text-6xl font-black text-blue-800">TOPIK I-듣기 기출문제</h1>
+            </div>
+            
+            <div class="row-start-2 row-span-1 col-span-12 flex items-center justify-center" style="margin-top: -1vh;">
+                <p class="font-black text-blue-600" style="font-size: clamp(1.875rem, 5vw, 3rem);">(by Kiyoshi Chang)</p>
+            </div>
+            
+            <div class="row-start-3 row-span-8 col-span-12 flex items-center px-0">
+                <div class="hidden md:flex w-full h-full">
+                    <div class="w-[10%] h-full"></div>
+                    
+                    <div class="w-[50%] h-full flex items-center justify-end pr-8">
+                        <img src="https://mon-ami.up.seesaa.net/topik/TOPIK_Logo.png" alt="TOPIK Logo" class="max-h-full max-w-full object-contain">
+                    </div>
+                    
+                    <div class="w-[30%] h-full flex items-center justify-start pl-8">
+                        <dotlottie-player src="https://lottie.host/7ed854b3-9684-40f1-b6fd-810ce0c67921/rbhEC1S0dd.lottie" background="transparent" speed="1" style="width: 540px; height: 540px" loop autoplay></dotlottie-player>
+                    </div>
+                    
+                    <div class="w-[10%] h-full"></div>
+                </div>
+                
+                <div class="flex md:hidden w-full h-full flex-col items-center justify-center px-4">
+                    <div class="flex-1 flex items-end justify-center pb-4">
+                        <img src="https://mon-ami.up.seesaa.net/topik/TOPIK_Logo.png" alt="TOPIK Logo" class="max-h-full max-w-full object-contain" style="max-height: 200px;">
+                    </div>
+                    
+                    <div class="flex-1 flex items-start justify-center pt-4">
+                        <dotlottie-player src="https://lottie.host/7ed854b3-9684-40f1-b6fd-810ce0c67921/rbhEC1S0dd.lottie" background="transparent" speed="1" style="width: 280px; height: 280px" loop autoplay></dotlottie-player>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="idle-hint" class="absolute w-full text-center font-bold italic text-blue-600 hidden" style="top: 84%;">
+                ↓Please select a function↓
+            </div>
+            
+            <div class="absolute w-full flex items-center justify-center gap-2 sm:gap-8 home-nav-buttons" style="top: 87.5%; height: 3.5%;">
+                <button onclick="showPage('page2')" class="btn-primary btn-hover px-3 sm:px-6 py-2 text-sm sm:text-lg">VOCABULARIES</button>
+                <button onclick="showPage('page3')" class="btn-primary btn-hover px-3 sm:px-6 py-2 text-sm sm:text-lg">PRACTICE</button>
+                <button onclick="showPage('page4')" class="btn-primary btn-hover px-3 sm:px-6 py-2 text-sm sm:text-lg">QUESTIONS</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="page2" class="page">
+        <div class="absolute inset-0 grid grid-rows-12 grid-cols-12 gap-0">
+            <div class="row-start-1 row-span-1 col-span-12 flex items-end justify-center px-4" style="padding-bottom: 0vh;">
+                <h1 class="text-3xl md:text-5xl font-black text-blue-800 text-center vocab-title">TOPIK I-듣기 VOCABULARIES</h1>
+            </div>
+            
+            <div class="row-start-2 row-span-8 col-span-12 px-4" id="vocab-content" style="padding-top: 1vh; padding-bottom: 0;">
+                </div>
+            
+            <div class="absolute w-full flex items-center justify-center gap-1 mobile-nav-buttons-up" style="--original-top: 85.5%; top: 85.5%; height: 2.5%;">
+                <button onclick="showVocabPage(1)" class="nav-button bg-blue-500 text-white" id="vocab-nav-1">1</button>
+                <button onclick="showVocabPage(2)" class="nav-button bg-gray-400 text-white" id="vocab-nav-2">2</button>
+                <button onclick="showVocabPage(3)" class="nav-button bg-gray-400 text-white" id="vocab-nav-3">3</button>
+                <button onclick="showVocabPage(4)" class="nav-button bg-gray-400 text-white" id="vocab-nav-4">4</button>
+                <button onclick="showVocabPage(5)" class="nav-button bg-gray-400 text-white" id="vocab-nav-5">5</button>
+            </div>
+            
+            <div class="absolute w-full flex items-center justify-center gap-2 sm:gap-8 mobile-nav-up" style="--original-top: 89.5%; top: 89.5%; height: 3.5%;">
+                <button onclick="showPage('page1')" class="btn-primary btn-hover px-3 sm:px-4 py-2 text-sm sm:text-base">HOME</button>
+                <button onclick="showPage('page3')" class="btn-primary btn-hover px-3 sm:px-4 py-2 text-sm sm:text-base">PRACTICE</button>
+                <button onclick="showPage('page4')" class="btn-primary btn-hover px-3 sm:px-4 py-2 text-sm sm:text-base">QUESTIONS</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="page3" class="page">
+        <div class="absolute inset-0 grid grid-rows-12 grid-cols-12 gap-0">
+            <div class="row-start-1 row-span-1 col-span-12 flex items-end justify-center" style="padding-bottom: 1vh;">
+                <h1 class="text-3xl md:text-5xl font-black text-blue-800">TOPIK I-듣기 PRACTICE</h1>
+            </div>
+            
+            <div class="absolute w-full flex items-center justify-center gap-4 px-4" style="top: 8.5%; height: 4%;">
+                <div class="bg-white rounded-lg px-4 py-2 shadow-md">
+                    <span class="font-bold text-blue-800">문제: <span id="practice-current">1</span></span>
+                </div>
+                <div class="bg-white rounded-lg px-4 py-2 shadow-md">
+                    <span class="font-bold text-green-600">맞은 어휘: <span id="practice-correct">0</span></span>
+                </div>
+                <div class="bg-white rounded-lg px-4 py-2 shadow-md">
+                    <span class="font-bold text-purple-600">점수: <span id="practice-score">0</span></span>
+                </div>
+            </div>
+            
+            <div class="absolute w-full flex items-center justify-center z-20 pointer-events-none" style="top: 35%; height: 6%;">
+                <div id="practice-feedback" class="hidden rounded-xl px-8 py-6 shadow-xl text-center border-2 pointer-events-auto" style="background-color: rgba(255, 255, 255, 0.3); backdrop-filter: blur(10px);">
+                    <div class="text-3xl font-bold mb-2" id="practice-feedback-korean"></div>
+                    <div class="text-xl" id="practice-feedback-english" style="margin-top: 0.5vh;"></div>
+                </div>
+            </div>
+            
+            <div class="row-start-3 row-span-8 col-span-12 px-4" id="practice-content" style="padding-top: 0vh; padding-bottom: 0;">
+                </div>
+            
+            <div class="absolute w-full flex items-center justify-center gap-1 mobile-nav-buttons-up" style="--original-top: 85.0%; top: 85.0%; height: 2.5%;" id="practice-nav">
+                </div>
+            
+            <div class="absolute w-full flex items-center justify-center gap-2 sm:gap-8 mobile-nav-up" style="--original-top: 89.5%; top: 89.5%; height: 3.5%;">
+                <button onclick="showPage('page1')" class="btn-primary btn-hover px-3 sm:px-4 py-2 text-sm sm:text-base">HOME</button>
+                <button onclick="showPage('page2')" class="btn-primary btn-hover px-3 sm:px-4 py-2 text-sm sm:text-base">VOCABULARIES</button>
+                <button onclick="showPage('page4')" class="btn-primary btn-hover px-3 sm:px-4 py-2 text-sm sm:text-base">QUESTIONS</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="page4" class="page">
+        <div class="absolute inset-0">
+            <div class="absolute w-full flex items-center justify-center" style="top: 2%; height: 5%;">
+                <h1 class="text-3xl md:text-5xl font-black text-blue-800 whitespace-nowrap">TOPIK I-듣기 QUESTIONS</h1>
+            </div>
+            
+            <div class="absolute w-full flex items-center justify-center gap-4 px-4" style="top: 8.5%; height: 4%;">
+                <div class="bg-white rounded-lg px-4 py-2 shadow-md flex items-center justify-center h-full">
+                    <span class="font-bold text-blue-800 whitespace-nowrap text-sm md:text-base">문제: <span id="question-current">1</span></span>
+                </div>
+                <div class="bg-white rounded-lg px-4 py-2 shadow-md flex items-center justify-center h-full">
+                    <span class="font-bold text-green-600 whitespace-nowrap text-sm md:text-base">맞은 문제: <span id="question-correct">0</span></span>
+                </div>
+                <div class="bg-white rounded-lg px-4 py-2 shadow-md flex items-center justify-center h-full">
+                    <span class="font-bold text-purple-600 whitespace-nowrap text-sm md:text-base">점수: <span id="question-score">0</span></span>
+                </div>
+            </div>
+            
+            <div class="absolute w-full flex items-center justify-center px-4" style="top: 13.5%; height: 4%;">
+                <div class="w-full max-w-2xl relative">
+                    <audio id="question-audio" class="w-full h-8" controls controlsList="nodownload">
+                        <track kind="subtitles" src="" srclang="ko" label="Korean" id="audio-track">
+                    </audio>
+                    <div class="absolute top-0 right-0">
+                        <button id="overflow-btn" class="w-8 h-8 bg-blue-500 hover:bg-blue-600 rounded-full flex items-center justify-center text-white font-bold transition-all">⋮</button>
+                        <div id="overflow-panel" class="overflow-panel hidden z-50">
+                            <button onclick="closeOverflowPanel()" class="close-button">×</button>
+                            <div style="margin-top: 8px;">
+                                <button onclick="setPlaybackSpeed(0.5)" id="speed-50" class="menu-item">Speed: 50%</button>
+                                <button onclick="setPlaybackSpeed(0.75)" id="speed-75" class="menu-item">Speed: 75%</button>
+                                <button onclick="toggleCaptions()" id="captions-btn" class="menu-item">Captions</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="subtitle-container" class="absolute w-full flex items-center justify-center px-4" style="top: 18%; height: 3.5%;">
+                <div id="subtitles" class="text-center bg-transparent w-full max-w-4xl" style="visibility: hidden;">
+                    <div id="subtitle-korean" class="text-base font-bold leading-tight text-blue-600" style="margin-bottom: 0.05vh;"></div>
+                    <div id="subtitle-chinese" class="text-sm leading-tight"></div>
+                </div>
+            </div>
+            
+            <div class="absolute w-full px-4 mobile-images-top-down" style="--original-top: 23.5%; top: 23.5%; height: 29.5%;">
+                <div class="flex gap-2 h-full max-w-4xl mx-auto justify-center" id="question-images-top">
+                    </div>
+            </div>
+            
+            <div class="absolute w-full px-4 mobile-images-bottom-up" style="--original-top: 55%; top: 55%; height: 29.5%;">
+                <div class="flex gap-2 h-full max-w-4xl mx-auto justify-center" id="question-images-bottom">
+                    </div>
+            </div>
+            
+            <div class="absolute w-full flex items-center justify-center z-20 mobile-countdown-up" style="--original-top: 49%; top: 49%; height: 8%;">
+                <div id="countdown-container" class="countdown-container hidden">
+                    <div id="countdown-display" class="countdown countdown-large text-gray-400" style="text-shadow: 0 0 20px currentColor; position: relative; z-index: 2;">3</div>
+                    <div id="countdown-circle" class="countdown-circle" style="color: #9ca3af;"></div>
+                </div>
+                <div id="question-feedback" class="hidden rounded-xl px-8 py-6 shadow-xl text-center border-2" style="background-color: rgba(255, 255, 255, 0.3); backdrop-filter: blur(10px);">
+                    <div class="text-3xl font-bold mb-2" id="question-feedback-korean"></div>
+                    <div class="text-xl" id="question-feedback-english" style="margin-top: 0.5vh;"></div>
+                </div>
+            </div>
+            
+            <div class="absolute w-full flex items-center justify-center gap-1 mobile-nav-buttons-up" style="--original-top: 85.5%; top: 85.5%; height: 2.5%;" id="question-nav">
+                </div>
+            
+            <div class="absolute w-full flex items-center justify-center gap-2 sm:gap-8 mobile-nav-up" style="--original-top: 89.5%; top: 89.5%; height: 3.5%;">
+                <button onclick="showPage('page1')" class="btn-primary btn-hover px-3 sm:px-4 py-2 cursor-pointer text-sm sm:text-base">HOME</button>
+                <button onclick="showPage('page2')" class="btn-primary btn-hover px-3 sm:px-4 py-2 cursor-pointer text-sm sm:text-base">VOCABULARIES</button>
+                <button onclick="showPage('page3')" class="btn-primary btn-hover px-3 sm:px-4 py-2 cursor-pointer text-sm sm:text-base">PRACTICE</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="practice-results" class="page">
+        <div class="absolute inset-0 grid grid-rows-12 grid-cols-12 gap-0 p-4">
+            <div class="row-start-1 row-span-10 col-span-12 bg-white rounded-lg shadow-lg p-6 overflow-auto">
+                <h2 class="text-3xl font-black text-center mb-6 text-blue-800">연습 결과</h2>
+                <div id="practice-results-content"></div>
+                <div class="text-center mt-6">
+                    <button onclick="resetPractice(); showPage('page3');" class="btn-secondary btn-hover px-8 py-3 mr-4">PLAY AGAIN</button>
+                </div>
+            </div>
+            <div class="absolute w-full flex items-center justify-center gap-2 sm:gap-8 mobile-nav-up" style="--original-top: 89.5%; top: 89.5%; height: 3.5%;">
+                <button onclick="showPage('page1')" class="btn-primary btn-hover px-3 sm:px-4 py-2 text-sm sm:text-base">HOME</button>
+                <button onclick="showPage('page2')" class="btn-primary btn-hover px-3 sm:px-4 py-2 text-sm sm:text-base">VOCABULARIES</button>
+                <button onclick="showPage('page4')" class="btn-primary btn-hover px-3 sm:px-4 py-2 text-sm sm:text-base">QUESTIONS</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="question-results" class="page">
+        <div class="absolute inset-0 grid grid-rows-12 grid-cols-12 gap-0 p-4">
+            <div class="row-start-1 row-span-11 col-span-12 bg-white rounded-lg shadow-lg p-3 overflow-auto" style="margin-bottom: 5vh;">
+                <h2 class="text-3xl font-black text-center mb-2 text-blue-800">시험 결과</h2>
+                <div id="question-results-content"></div>
+                <div class="text-center mt-6">
+                    <button onclick="resetQuestions(); showPage('page4');" class="btn-secondary btn-hover px-8 py-3 mr-4">PLAY AGAIN</button>
+                </div>
+            </div>
+            <div class="absolute w-full flex items-center justify-center gap-2 sm:gap-8 mobile-nav-up" style="--original-top: 89.5%; top: 89.5%; height: 3.5%;">
+                <button onclick="showPage('page1')" class="btn-primary btn-hover px-3 sm:px-4 py-2 text-sm sm:text-base">HOME</button>
+                <button onclick="showPage('page2')" class="btn-primary btn-hover px-3 sm:px-4 py-2 text-sm sm:text-base">VOCABULARIES</button>
+                <button onclick="showPage('page3')" class="btn-primary btn-hover px-3 sm:px-4 py-2 text-sm sm:text-base">PRACTICE</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://kiyoshichang.github.io/code/topik/quiz_data02En.js"></script>
+    <script src="https://kiyoshichang.github.io/code/topik/quiz_data03.js"></script>
+</body>
+</html>
